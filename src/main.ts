@@ -1,137 +1,223 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { Plugin, 
+         PluginSettingTab,
+         App,
+         Editor,
+         MarkdownView,
+         Modal,
+         Notice,
+         Setting } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
-	mySetting: string;
+interface NavigatorPluginSettings {
+    scrollSpeed: number;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+const DEFAULT_SETTINGS: NavigatorPluginSettings = {
+    scrollSpeed: 100, // default scroll speed
+};
+
+export default class NavigatorPlugin extends Plugin {
+    settings: NavigatorPluginSettings;
+    private isInLinkSelectionMode: boolean = false;
+    private scrollableClassName: string = 'markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings show-indentation-guide allow-fold-lists show-properties'
+
+    async onload() {
+        await this.loadSettings();
+        this.addSettingTab(new NavigatorPluginSettingTab(this.app, this));
+
+        this.registerDomEvent(document, 'keydown', (evt: KeyboardEvent) => {
+            this.handleKeyPress(evt);
+        });
+
+        this.registerEvent(
+            this.app.workspace.on('active-leaf-change', () => {
+                this.leaveLinkSelectionMode();
+            })
+        );
+    }
+
+    onunload() {
+        this.saveData(this.settings);
+    }
+
+    private async loadSettings() {
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    }
+
+    private handleKeyPress(evt: KeyboardEvent) {
+        if (!this.isInReadMode()) {
+            return;
+        }
+
+        switch (evt.key) {
+            case 'j':
+              this.scrollDown();
+              break;
+             case 'k':
+              this.scrollUp();
+              break;
+            case 'f':
+              this.enterLinkSelectionMode();
+              break;
+            case 'x':
+              this.closeCurrentNote();
+              break;
+        }
+    }
+
+
+    private closeCurrentNote() {
+        const activeLeaf = this.app.workspace.activeLeaf;
+        if (activeLeaf) {
+            this.app.workspace.detachLeavesOfType('markdown', activeLeaf);
+        }
+    }
+
+
+    private scroll(speed: number) {
+      const activeLeaf = this.app.workspace.activeLeaf;
+      const activeElement = activeLeaf?.view.containerEl;
+      const activeScrollableElement = activeElement.querySelector('.markdown-preview-view.markdown-rendered.node-insert-event.is-readable-line-width.allow-fold-headings.show-indentation-guide.allow-fold-lists.show-properties');
+      if (activeElement) {
+        activeScrollableElement.scrollBy(0, speed);
+      }
+    }
+
+
+    private scrollDown() {
+      this.scroll(this.settings.scrollSpeed)
+    }
+
+
+    private scrollUp() {
+      this.scroll(-this.settings.scrollSpeed)
+    }
+
+        
+    private isInReadMode(): boolean {
+        const activeLeaf = this.app.workspace.activeLeaf;
+        return activeLeaf?.view.getViewType() === 'markdown'; // && !activeLeaf.view.getState().mode;
+    }
+
+
+    private removeOverlays() {
+        document.querySelectorAll('.link-overlay').forEach(el => el.remove());
+    }
+
+
+    private leaveLinkSelectionMode() {
+        this.removeOverlays();
+        this.isInLinkSelectionMode = false;
+    }
+
+
+  private enterLinkSelectionMode() {
+          if (!this.isInReadMode()) {
+                return;
+            }
+
+          this.isInLinkSelectionMode = true;
+    
+      let links = Array.from(document.querySelectorAll('a'));
+      const filteredLinks = links.filter(link => 
+        link.classList.contains('internal-link') || link.classList.contains('external-link')
+      ); 
+
+      const linkMap = new Map<number, HTMLAnchorElement>();
+      let input = '';
+
+      const updateOverlays = () => {
+        if (this.isInLinkSelectionMode) {
+          removeOverlays();
+
+          filteredLinks.forEach((link, index) => {
+              if (link.textContent.toLowerCase().includes(input.toLowerCase())) {
+              const overlay = document.createElement('div');
+
+              overlay.classList.add('link-overlay');
+              overlay.classList.add('vimium-like-link-overlay');
+
+              overlay.textContent = (index + 1).toString();
+              overlay.style.position = 'absolute';
+              overlay.style.backgroundColor = 'yellow';
+              overlay.style.color = 'black';
+              //
+              document.body.appendChild(overlay);
+              const rect = link.getBoundingClientRect();
+
+              overlay.style.left = `${rect.left}px`;
+              overlay.style.top = `${rect.top}px`;
+
+              linkMap.set(index + 1, link);
+              }
+          });
+        }
+      };
+
+      const removeOverlays = () => {this.removeOverlays();}
+
+      updateOverlays(); // Initial call to display all links
+
+      // Listen for keypresses for filtering and navigation
+      const keydownListener = (evt: KeyboardEvent) => {
+        if (evt.key === 'Escape') {
+          this.leaveLinkSelectionMode();
+        } else if (evt.key.length === 1 && /[0-9]/.test(evt.key)) { // check if the key is a number
+          const key = parseInt(evt.key, 10);
+          if (linkMap.has(key)) {
+            const link = linkMap.get(key);
+            link?.click();
+            this.leaveLinkSelectionMode();
+            document.removeEventListener('keydown', keydownListener);
+          }
+        }
+      };
+
+      // event listeners only active in link selection mode
+      if (this.isInLinkSelectionMode) {
+        document.addEventListener('keydown', keydownListener);
+
+        window.addEventListener('scroll', (event) => {
+          if (event.target.className === this.scrollableClassName) {
+              updateOverlays();
+          }
+        }, true); // The 'true' here sets the listener to capture the event during the capturing phase
+      } else {
+        document.removeEventListener('keydown', keydownListener);
+      }
+    }
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+class NavigatorPluginSettingTab extends PluginSettingTab {
+  plugin: NavigatorPlugin;
 
-	async onload() {
-		await this.loadSettings();
+  constructor(app: App, plugin: NavigatorPlugin) {
+      super(app, plugin);
+      this.plugin = plugin;
+  }
+  display() {
+      const { containerEl } = this;
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
+      containerEl.empty();
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+      // Create a span element to display the current scroll speed
+      const scrollSpeedDisplay = containerEl.createEl('span', {
+          text: `Current scroll speed: ${this.plugin.settings.scrollSpeed}`
+      });
 
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
+      new Setting(containerEl)
+          .setName('Scroll Speed')
+          .setDesc('Adjust the scroll speed for j/k keys')
+          .addSlider(slider => 
+              slider.setLimits(10, 500, 10)
+                    .setValue(this.plugin.settings.scrollSpeed)
+                    .onChange(async (value) => {
+                        this.plugin.settings.scrollSpeed = value;
+                        await this.plugin.saveData(this.plugin.settings);
 
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
+                        // Update the display text when the slider value changes
+                        scrollSpeedDisplay.setText(`Current scroll speed: ${value}`);
+                    }));
+  }
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-	}
-
-	onunload() {
-
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
-
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-	}
-}

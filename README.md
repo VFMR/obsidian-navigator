@@ -21,21 +21,15 @@ To install Obsidian Navigator:
 
 ## Usage
 - `j`: Scroll down in the current note.
-- `/`: Enter link selection mode. Type characters to filter links and press the corresponding number to open a link.
+- `k`: Scroll up in the current note.
+- `f`: Enter link selection mode. Type characters to filter links and press the corresponding number to open a link.
 - `Esc`: Exit link selection mode.
-
-For the full list of keybindings, refer to the [documentation](#).
+- `x`: Close the current note.
 
 ## Configuration
 Customize the scroll speed by navigating to the plugin settings in Obsidian:
 1. Open Settings > Obsidian Navigator.
 2. Adjust the 'Scroll Speed' slider to your liking.
-
-## Contributing
-Contributions to Obsidian Navigator are welcome! Please read our [contributing guidelines](CONTRIBUTING.md) to get started.
-
-## License
-Obsidian Navigator is released under the [MIT License](LICENSE).
 
 ---
 

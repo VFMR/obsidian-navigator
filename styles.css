@@ -1,0 +1,22 @@
+/*
+
+This CSS file will be included with your plugin, and
+available in the app when your plugin is enabled.
+
+If your plugin does not need CSS, delete this file.
+
+*/
+.vimium-like-link-overlay {
+    position: absolute;
+    background-color: var(--background-modifier-accent, yellow);
+    color: var(--text-on-accent, black);
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    z-index: 100;
+    /* Additional styling as needed */
+}
+
+.markdown-preview-view {
+    scroll-behavior: smooth;
+}

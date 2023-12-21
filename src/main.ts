@@ -64,17 +64,6 @@ export default class NavigatorPlugin extends Plugin {
             case 'f':
               this.enterLinkSelectionMode();
               break;
-            case 'x':
-              this.closeCurrentNote();
-              break;
-        }
-    }
-
-
-    private closeCurrentNote() {
-        const activeLeaf = this.app.workspace.activeLeaf;
-        if (activeLeaf) {
-            this.app.workspace.detachLeavesOfType('markdown', activeLeaf);
         }
     }
 

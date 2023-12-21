@@ -1,7 +1,7 @@
 
 # Obsidian Navigator
 
-![](ressources/obsidian-navigator-icon.png)
+![Obsidian Navigator Icon](ressources/obsidian-navigator-icon.png)
 
 ## Introduction
 Obsidian Navigator is a powerful navigation plugin for Obsidian, inspired by the Vimium browser extension. It enhances the user experience in Obsidian by introducing efficient keyboard-based navigation and link selection features, enabling users to navigate their notes more fluidly and intuitively.
@@ -11,6 +11,8 @@ Obsidian Navigator is a powerful navigation plugin for Obsidian, inspired by the
 - **Link Selection Mode**: Easily select and open links using keyboard shortcuts.
 - **Configurable Scroll Speed**: Customize the scroll speed to suit your preference.
 - **Read-Mode Specific**: Functionality is tailored to work exclusively in Obsidian's read mode, ensuring seamless integration with your workflow.
+
+![Screenshot showing the link selection feature](ressources/screenshot1.png)
 
 ## Installation
 To install Obsidian Navigator:

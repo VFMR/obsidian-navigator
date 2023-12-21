@@ -55,6 +55,12 @@ export default class NavigatorPlugin extends Plugin {
              case 'k':
               this.scrollUp();
               break;
+             case 'h':
+              this.scrollUp();
+              break;
+             case 'l':
+              this.scrollUp();
+              break;
             case 'f':
               this.enterLinkSelectionMode();
               break;
@@ -73,23 +79,33 @@ export default class NavigatorPlugin extends Plugin {
     }
 
 
-    private scroll(speed: number) {
+    private scroll(xSpeed: number, ySpeed: number) {
       const activeLeaf = this.app.workspace.activeLeaf;
       const activeElement = activeLeaf?.view.containerEl;
       const activeScrollableElement = activeElement.querySelector('.markdown-preview-view.markdown-rendered.node-insert-event.is-readable-line-width.allow-fold-headings.show-indentation-guide.allow-fold-lists.show-properties');
       if (activeElement) {
-        activeScrollableElement.scrollBy(0, speed);
+        activeScrollableElement.scrollBy(xSpeed, ySpeed);
       }
     }
 
 
     private scrollDown() {
-      this.scroll(this.settings.scrollSpeed)
+      this.scroll(0, this.settings.scrollSpeed)
     }
 
 
     private scrollUp() {
-      this.scroll(-this.settings.scrollSpeed)
+      this.scroll(0, -this.settings.scrollSpeed)
+    }
+
+
+    private scrollLeft() {
+      this.scroll(this.settings.scrollSpeed, 0)
+    }
+
+
+    private scrollRight() {
+      this.scroll(-this.settings.scrollSpeed, 0)
     }
 
         

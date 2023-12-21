@@ -12,7 +12,7 @@ Obsidian Navigator is a powerful navigation plugin for Obsidian, inspired by the
 - **Configurable Scroll Speed**: Customize the scroll speed to suit your preference.
 - **Read-Mode Specific**: Functionality is tailored to work exclusively in Obsidian's read mode, ensuring seamless integration with your workflow.
 
-![Screenshot showing the link selection feature](ressources/screenshot1.png)
+![Screenshot showing the link selection feature](ressources/screenshot1.PNG)
 
 ## Installation
 To install Obsidian Navigator:

@@ -17,9 +17,10 @@ Obsidian Navigator is a powerful navigation plugin for Obsidian, inspired by the
 ## Installation
 To install Obsidian Navigator:
 1. Download the latest release from the [GitHub repository](#).
-2. In Obsidian, open Settings > Community Plugins.
-3. Disable Safe Mode.
-4. Click Browse and select the downloaded release.
+2. Copy the plugin into `<your-vault>/.obsidian/plugins/`
+3. In Obsidian, open Settings > Community Plugins.
+4. Disable Safe Mode.
+5. Enable the plugin.
 
 ## Usage
 - `j`: Scroll down in the current note.

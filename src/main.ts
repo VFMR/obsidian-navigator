@@ -14,7 +14,12 @@ const DEFAULT_SETTINGS: NavigatorPluginSettings = {
 export default class NavigatorPlugin extends Plugin {
     settings: NavigatorPluginSettings;
     private isInLinkSelectionMode: boolean = false;
+    private filterInput: string = '';
     private scrollableClassName: string = 'markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings show-indentation-guide allow-fold-lists show-properties'
+    private linkMap = new Map<number, HTMLAnchorElement>();
+    private filteredLinks: HTMLAnchorElement[] = [];
+    private keydownListener = (evt: KeyboardEvent) => this.listenKeydown(evt);
+
 
     async onload() {
         await this.loadSettings();
@@ -29,15 +34,29 @@ export default class NavigatorPlugin extends Plugin {
                 this.leaveLinkSelectionMode();
             })
         );
+
+        // window.addEventListener('scroll', (event) => {
+        //   if (event.target.className === this.scrollableClassName) {
+        //       this.updateOverlays();
+        //   }
+        // }, true); // The 'true' here sets the listener to capture the event during the capturing phase
+        window.addEventListener('scroll', this.updateOverlays.bind(this), true);
     }
 
     onunload() {
         this.saveData(this.settings);
+        window.removeEventListener('scroll', this.updateOverlays.bind(this), true);
     }
 
     private async loadSettings() {
         this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     }
+
+
+    private resetLinkMap() {
+      this.linkMap = new Map<number, HTMLAnchorElement>();
+    }
+
 
     private handleKeyPress(evt: KeyboardEvent) {
 
@@ -47,16 +66,24 @@ export default class NavigatorPlugin extends Plugin {
 
         switch (evt.key) {
             case 'j':
-              this.scrollDown();
+              if (!this.isInLinkSelectionMode) {
+                this.scrollDown();
+              }
               break;
              case 'k':
-              this.scrollUp();
+              if (!this.isInLinkSelectionMode) {
+                this.scrollUp();
+              }
               break;
              case 'h':
-              this.scrollUp();
+              if (!this.isInLinkSelectionMode) {
+                this.scrollUp();
+              }
               break;
              case 'l':
-              this.scrollUp();
+              if (!this.isInLinkSelectionMode) {
+                this.scrollUp();
+              }
               break;
             case 'f':
               this.enterLinkSelectionMode();
@@ -130,91 +157,107 @@ export default class NavigatorPlugin extends Plugin {
     }
 
 
+    private getFilteredLinks() {
+      this.resetLinkMap();
+
+      let links = Array.from(document.querySelectorAll('a'));
+      const filteredLinks = links.filter(link => 
+        link.classList.contains('internal-link') || link.classList.contains('external-link')
+      ); 
+      if (this.filterInput) {
+        const inputFilteredLinks = filteredLinks.filter(link => 
+          link.innerText.toLowerCase().includes(this.filterInput.toLowerCase()));
+          this.filteredLinks = inputFilteredLinks;
+      } else {
+        this.filteredLinks = filteredLinks;
+      }
+    }
+
+
     private removeOverlays() {
-        document.querySelectorAll('.link-overlay').forEach(el => el.remove());
+        document.querySelectorAll('.vimium-like-link-overlay').forEach(el => el.remove());
+        document.querySelectorAll('.default-link-overlay').forEach(el => el.remove());
+    }
+
+
+
+
+  private updateOverlays() {
+      if (this.isInLinkSelectionMode) {
+        this.removeOverlays();
+
+        this.filteredLinks.forEach((link, index) => {
+          const overlay = document.createElement('div');
+
+          // styling
+          overlay.classList.add('vimium-like-link-overlay');
+          if (index === 0) {  // special styling for default link
+            overlay.classList.add('default-link-overlay')
+          }
+
+          overlay.textContent = (index + 1).toString();
+
+          document.body.appendChild(overlay);
+
+          const rect = link.getBoundingClientRect();
+          overlay.style.left = `${rect.left}px`;
+          overlay.style.top = `${rect.top}px`;
+
+          this.linkMap.set(index + 1, link);
+        });
+      }
+  }
+
+
+  private clickLink(index) {
+    if (this.linkMap.has(index)) {
+      const link = this.linkMap.get(index);  
+      link?.click();
+      this.leaveLinkSelectionMode();
+      document.removeEventListener('keydown', this.keydownListener);
+    }
+  }
+
+
+  private updateFilterInput(key) {
+    this.filterInput += key;
+  }
+
+
+  private listenKeydown(evt: KeyboardEvent) {
+      if (evt.key === 'Escape') {
+        this.leaveLinkSelectionMode();
+      } else if (evt.key.length === 1 && /[0-9]/.test(evt.key)) { // check if the key is a number
+        const key = parseInt(evt.key, 10);
+        this.clickLink(key)
+      } else if (evt.key === 'Enter') {
+        this.clickLink(1)
+      } else if (evt.key.length === 1 && /[a-zA-Z]/.test(evt.key)) {
+        this.updateFilterInput(evt.key);
+        this.getFilteredLinks();
+        this.updateOverlays();
+      }
+  }
+
+
+  private enterLinkSelectionMode() {
+      if (!this.isInReadMode()) {
+            return;
+        }
+      this.isInLinkSelectionMode = true;
+      this.filterInput = '';
+      this.getFilteredLinks();
+      this.updateOverlays();
+
+      document.addEventListener('keydown', this.keydownListener);
     }
 
 
     private leaveLinkSelectionMode() {
         this.removeOverlays();
         this.isInLinkSelectionMode = false;
-    }
-
-
-  private enterLinkSelectionMode() {
-          if (!this.isInReadMode()) {
-                return;
-            }
-
-          this.isInLinkSelectionMode = true;
-    
-      let links = Array.from(document.querySelectorAll('a'));
-      const filteredLinks = links.filter(link => 
-        link.classList.contains('internal-link') || link.classList.contains('external-link')
-      ); 
-
-      const linkMap = new Map<number, HTMLAnchorElement>();
-      let input = '';
-
-      const updateOverlays = () => {
-        if (this.isInLinkSelectionMode) {
-          removeOverlays();
-
-          filteredLinks.forEach((link, index) => {
-              if (link.textContent.toLowerCase().includes(input.toLowerCase())) {
-              const overlay = document.createElement('div');
-
-              overlay.classList.add('link-overlay');
-              overlay.classList.add('vimium-like-link-overlay');
-
-              overlay.textContent = (index + 1).toString();
-              overlay.style.position = 'absolute';
-              overlay.style.backgroundColor = 'yellow';
-              overlay.style.color = 'black';
-              //
-              document.body.appendChild(overlay);
-              const rect = link.getBoundingClientRect();
-
-              overlay.style.left = `${rect.left}px`;
-              overlay.style.top = `${rect.top}px`;
-
-              linkMap.set(index + 1, link);
-              }
-          });
-        }
-      };
-
-      const removeOverlays = () => {this.removeOverlays();}
-
-      updateOverlays(); // Initial call to display all links
-
-      // Listen for keypresses for filtering and navigation
-      const keydownListener = (evt: KeyboardEvent) => {
-        if (evt.key === 'Escape') {
-          this.leaveLinkSelectionMode();
-        } else if (evt.key.length === 1 && /[0-9]/.test(evt.key)) { // check if the key is a number
-          const key = parseInt(evt.key, 10);
-          if (linkMap.has(key)) {
-            const link = linkMap.get(key);
-            link?.click();
-            this.leaveLinkSelectionMode();
-            document.removeEventListener('keydown', keydownListener);
-          }
-        }
-      };
-
-      // event listeners only active in link selection mode
-      if (this.isInLinkSelectionMode) {
-        document.addEventListener('keydown', keydownListener);
-
-        window.addEventListener('scroll', (event) => {
-          if (event.target.className === this.scrollableClassName) {
-              updateOverlays();
-          }
-        }, true); // The 'true' here sets the listener to capture the event during the capturing phase
-      } else {
-        document.removeEventListener('keydown', keydownListener);
-      }
+        this.filterInput = '';
+        this.resetLinkMap();
+        document.removeEventListener('keydown', this.keydownListener);
     }
 }
-

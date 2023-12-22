@@ -8,8 +8,10 @@ If your plugin does not need CSS, delete this file.
 */
 .vimium-like-link-overlay {
     position: absolute;
-    background-color: var(--background-modifier-accent, yellow);
-    color: var(--text-on-accent, black);
+    /* background-color: var(--background-modifier-accent, yellow); */
+    /* color: var(--text-on-accent, black); */
+    background-color: yellow; 
+    color: black; 
     padding: 2px 5px;
     border-radius: 3px;
     font-size: 0.8em;
@@ -20,3 +22,10 @@ If your plugin does not need CSS, delete this file.
 .markdown-preview-view {
     scroll-behavior: smooth;
 }
+
+.default-link-overlay {
+    background-color: #f0f0f0; /* Light grey background */
+    color: black;
+    border: 1px solid #000; /* Black border */
+}
+

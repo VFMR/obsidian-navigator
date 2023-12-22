@@ -193,8 +193,14 @@ export default class NavigatorPlugin extends Plugin {
           startDigitsAt = Math.ceil(this.filteredLinks.length / 10) + 1;
         }
 
+
         this.filteredLinks.forEach((link, index) => {
           const overlay = document.createElement('div');
+
+          const computedStyle = window.getComputedStyle(link)
+          const fontSize = parseFloat(computedStyle.fontSize);
+          const offsetX = -fontSize ;
+          const offsetY = -fontSize / 2;
 
           // styling
           overlay.classList.add('vimium-like-link-overlay');
@@ -203,15 +209,14 @@ export default class NavigatorPlugin extends Plugin {
           }
 
           let linkNumber = index + startDigitsAt;
-          console.log('linkNumber ', linkNumber);
 
           overlay.textContent = (linkNumber).toString();
 
           document.body.appendChild(overlay);
 
           const rect = link.getBoundingClientRect();
-          overlay.style.left = `${rect.left}px`;
-          overlay.style.top = `${rect.top}px`;
+          overlay.style.left = `${rect.left + offsetX}px`;
+          overlay.style.top = `${rect.top + offsetY}px`;
 
           this.linkMap.set(linkNumber, link);
         });
@@ -235,8 +240,12 @@ export default class NavigatorPlugin extends Plugin {
 
 
     private listenKeydown(evt: KeyboardEvent) {
+
+      // Escape: leave link selection mode
       if (evt.key === 'Escape') {
         this.leaveLinkSelectionMode();
+
+      // number: select link
       } else if (evt.key.length === 1 && /[0-9]/.test(evt.key)) { // check if the key is a number
         this.linkSelectionInput += evt.key;
         const key = parseInt(this.linkSelectionInput, 10);
@@ -244,8 +253,13 @@ export default class NavigatorPlugin extends Plugin {
           this.clickLink(key)
           this.linkSelectionInput = '';
         }
+
+      // Enter: select default link
       } else if (evt.key === 'Enter') {
-        this.clickLink(1)
+        let defaultKey = this.linkMap.keys().next().value
+        this.clickLink(defaultKey)
+
+      // Alphabet character: filter links
       } else if (evt.key.length === 1 && /[a-zA-Z]/.test(evt.key)) {
         this.updateFilterInput(evt.key);
         this.getFilteredLinks();

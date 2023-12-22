@@ -55,42 +55,48 @@ export default class NavigatorPlugin extends Plugin {
 
 
     private handleKeyPress(evt: KeyboardEvent) {
+      if (!this.isInReadMode()) {
+          return;
+      }
 
-        if (!this.isInReadMode()) {
-            return;
-        }
+      switch (evt.key) {
 
-        switch (evt.key) {
-            case 'j':
-              if (!this.isInLinkSelectionMode) {
-                this.scrollDown();
-              }
-              break;
-             case 'k':
-              if (!this.isInLinkSelectionMode) {
-                this.scrollUp();
-              }
-              break;
-             case 'h':
-              if (!this.isInLinkSelectionMode) {
-                this.scrollUp();
-              }
-              break;
-             case 'l':
-              if (!this.isInLinkSelectionMode) {
-                this.scrollUp();
-              }
-              break;
-            case 'f':
-              this.enterLinkSelectionMode();
-              break;
-            case 'G':
-              this.scrollToBottom();
-              break;
-            case 'g':
-              this.scrollToTop();
-              break;
-        }
+        case 'j':
+          if (!this.isInLinkSelectionMode) {
+            this.scrollDown();
+          }
+          break;
+
+         case 'k':
+          if (!this.isInLinkSelectionMode) {
+            this.scrollUp();
+          }
+          break;
+
+         case 'h':
+          if (!this.isInLinkSelectionMode) {
+            this.scrollUp();
+          }
+          break;
+
+         case 'l':
+          if (!this.isInLinkSelectionMode) {
+            this.scrollUp();
+          }
+          break;
+
+        case 'f':
+          this.enterLinkSelectionMode();
+          break;
+
+        case 'G':
+          this.scrollToBottom();
+          break;
+
+        case 'g':
+          this.scrollToTop();
+          break;
+      }
     }
 
 
@@ -178,7 +184,7 @@ export default class NavigatorPlugin extends Plugin {
 
 
 
-  private updateOverlays() {
+    private updateOverlays() {
       if (this.isInLinkSelectionMode) {
         this.removeOverlays();
 
@@ -210,25 +216,25 @@ export default class NavigatorPlugin extends Plugin {
           this.linkMap.set(linkNumber, link);
         });
       }
-  }
-
-
-  private clickLink(index) {
-    if (this.linkMap.has(index)) {
-      const link = this.linkMap.get(index);  
-      link?.click();
-      this.leaveLinkSelectionMode();
-      document.removeEventListener('keydown', this.keydownListener);
     }
-  }
 
 
-  private updateFilterInput(key) {
-    this.filterInput += key;
-  }
+    private clickLink(index) {
+      if (this.linkMap.has(index)) {
+        const link = this.linkMap.get(index);  
+        link?.click();
+        this.leaveLinkSelectionMode();
+        document.removeEventListener('keydown', this.keydownListener);
+      }
+    }
 
 
-  private listenKeydown(evt: KeyboardEvent) {
+    private updateFilterInput(key) {
+      this.filterInput += key;
+    }
+
+
+    private listenKeydown(evt: KeyboardEvent) {
       if (evt.key === 'Escape') {
         this.leaveLinkSelectionMode();
       } else if (evt.key.length === 1 && /[0-9]/.test(evt.key)) { // check if the key is a number
@@ -245,10 +251,10 @@ export default class NavigatorPlugin extends Plugin {
         this.getFilteredLinks();
         this.updateOverlays();
       }
-  }
+    }
 
 
-  private enterLinkSelectionMode() {
+    private enterLinkSelectionMode() {
       if (!this.isInReadMode()) {
             return;
         }

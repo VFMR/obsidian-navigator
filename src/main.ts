@@ -105,7 +105,6 @@ export default class NavigatorPlugin extends Plugin {
       const activeElement = activeLeaf?.view.containerEl;
       const activeScrollableElement = activeElement.querySelector('.markdown-preview-view.markdown-rendered.node-insert-event.is-readable-line-width.allow-fold-headings.show-indentation-guide.allow-fold-lists.show-properties');
       return activeScrollableElement;
-        
     }
 
 
@@ -162,9 +161,9 @@ export default class NavigatorPlugin extends Plugin {
     private getFilteredLinks() {
       this.resetLinkMap();
 
-      let links = Array.from(document.querySelectorAll('a'));
+      let links = Array.from(document.querySelectorAll('a, button, input'));
       const filteredLinks = links.filter(link => 
-        link.classList.contains('internal-link') || link.classList.contains('external-link')
+        link.classList.contains('internal-link') || link.classList.contains('external-link') || link.classList.contains('task-list-item-checkbox') || link.classList.contains('button-default')
       ); 
       if (this.filterInput) {
         const inputFilteredLinks = filteredLinks.filter(link => 
@@ -177,10 +176,9 @@ export default class NavigatorPlugin extends Plugin {
 
 
     private removeOverlays() {
-        document.querySelectorAll('.vimium-like-link-overlay').forEach(el => el.remove());
-        document.querySelectorAll('.default-link-overlay').forEach(el => el.remove());
+        document.querySelectorAll('.vimium-like-link-overlay').forEach(el => el.remove()); 
+        document.querySelectorAll('.default-link-overlay').forEach(el => el.remove()); 
     }
-
 
 
 

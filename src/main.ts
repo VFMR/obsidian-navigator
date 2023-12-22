@@ -36,11 +36,6 @@ export default class NavigatorPlugin extends Plugin {
             })
         );
 
-        // window.addEventListener('scroll', (event) => {
-        //   if (event.target.className === this.scrollableClassName) {
-        //       this.updateOverlays();
-        //   }
-        // }, true); // The 'true' here sets the listener to capture the event during the capturing phase
         window.addEventListener('scroll', this.updateOverlays.bind(this), true);
     }
 
@@ -191,8 +186,6 @@ export default class NavigatorPlugin extends Plugin {
         if (this.filteredLinks.length > 9) {
           startDigitsAt = Math.ceil(this.filteredLinks.length / 10) + 1;
         }
-
-        console.log('startDigitsAt ', startDigitsAt)
 
         this.filteredLinks.forEach((link, index) => {
           const overlay = document.createElement('div');

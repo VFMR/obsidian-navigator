@@ -15,7 +15,7 @@ export default class NavigatorPlugin extends Plugin {
     settings: NavigatorPluginSettings;
     private isInLinkSelectionMode: boolean = false;
     private filterInput: string = '';
-    private scrollableClassName: string = 'markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings show-indentation-guide allow-fold-lists show-properties'
+    private scrollableClassName: string = 'markdown-preview-view.markdown-rendered'
     private linkMap = new Map<number, HTMLAnchorElement>();
     private filteredLinks: HTMLAnchorElement[] = [];
     private keydownListener = (evt: KeyboardEvent) => this.listenKeydown(evt);
@@ -103,7 +103,7 @@ export default class NavigatorPlugin extends Plugin {
     private getScrollContainer() {
       const activeLeaf = this.app.workspace.activeLeaf;
       const activeElement = activeLeaf?.view.containerEl;
-      const activeScrollableElement = activeElement.querySelector('.markdown-preview-view.markdown-rendered.node-insert-event.is-readable-line-width.allow-fold-headings.show-indentation-guide.allow-fold-lists.show-properties');
+      const activeScrollableElement = activeElement.querySelector('.markdown-preview-view.markdown-rendered');
       return activeScrollableElement;
     }
 

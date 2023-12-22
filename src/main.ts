@@ -19,6 +19,7 @@ export default class NavigatorPlugin extends Plugin {
     private linkMap = new Map<number, HTMLAnchorElement>();
     private filteredLinks: HTMLAnchorElement[] = [];
     private keydownListener = (evt: KeyboardEvent) => this.listenKeydown(evt);
+    private linkSelectionInput: string = '';
 
 
     async onload() {
@@ -186,6 +187,13 @@ export default class NavigatorPlugin extends Plugin {
       if (this.isInLinkSelectionMode) {
         this.removeOverlays();
 
+        let startDigitsAt = 1;
+        if (this.filteredLinks.length > 9) {
+          startDigitsAt = Math.ceil(this.filteredLinks.length / 10) + 1;
+        }
+
+        console.log('startDigitsAt ', startDigitsAt)
+
         this.filteredLinks.forEach((link, index) => {
           const overlay = document.createElement('div');
 
@@ -195,7 +203,10 @@ export default class NavigatorPlugin extends Plugin {
             overlay.classList.add('default-link-overlay')
           }
 
-          overlay.textContent = (index + 1).toString();
+          let linkNumber = index + startDigitsAt;
+          console.log('linkNumber ', linkNumber);
+
+          overlay.textContent = (linkNumber).toString();
 
           document.body.appendChild(overlay);
 
@@ -203,7 +214,7 @@ export default class NavigatorPlugin extends Plugin {
           overlay.style.left = `${rect.left}px`;
           overlay.style.top = `${rect.top}px`;
 
-          this.linkMap.set(index + 1, link);
+          this.linkMap.set(linkNumber, link);
         });
       }
   }
@@ -228,8 +239,12 @@ export default class NavigatorPlugin extends Plugin {
       if (evt.key === 'Escape') {
         this.leaveLinkSelectionMode();
       } else if (evt.key.length === 1 && /[0-9]/.test(evt.key)) { // check if the key is a number
-        const key = parseInt(evt.key, 10);
-        this.clickLink(key)
+        this.linkSelectionInput += evt.key;
+        const key = parseInt(this.linkSelectionInput, 10);
+        if (this.linkMap.has(key)) {
+          this.clickLink(key)
+          this.linkSelectionInput = '';
+        }
       } else if (evt.key === 'Enter') {
         this.clickLink(1)
       } else if (evt.key.length === 1 && /[a-zA-Z]/.test(evt.key)) {
@@ -258,6 +273,7 @@ export default class NavigatorPlugin extends Plugin {
         this.isInLinkSelectionMode = false;
         this.filterInput = '';
         this.resetLinkMap();
+        this.linkSelectionInput = '';
         document.removeEventListener('keydown', this.keydownListener);
     }
 }

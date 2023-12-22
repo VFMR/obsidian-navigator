@@ -1,11 +1,6 @@
-import { Plugin, 
-         PluginSettingTab,
-         App,
-         Editor,
-         MarkdownView,
-         Modal,
-         Notice,
-         Setting } from 'obsidian';
+import { Plugin, App } from 'obsidian';
+import NavigatorPluginSettingTab from './settings';
+
 
 interface NavigatorPluginSettings {
     scrollSpeed: number;
@@ -14,6 +9,7 @@ interface NavigatorPluginSettings {
 const DEFAULT_SETTINGS: NavigatorPluginSettings = {
     scrollSpeed: 100, // default scroll speed
 };
+
 
 export default class NavigatorPlugin extends Plugin {
     settings: NavigatorPluginSettings;
@@ -74,7 +70,6 @@ export default class NavigatorPlugin extends Plugin {
         }
     }
 
-    
 
     private getScrollContainer() {
       const activeLeaf = this.app.workspace.activeLeaf;
@@ -221,39 +216,5 @@ export default class NavigatorPlugin extends Plugin {
         document.removeEventListener('keydown', keydownListener);
       }
     }
-}
-
-class NavigatorPluginSettingTab extends PluginSettingTab {
-  plugin: NavigatorPlugin;
-
-  constructor(app: App, plugin: NavigatorPlugin) {
-      super(app, plugin);
-      this.plugin = plugin;
-  }
-  display() {
-      const { containerEl } = this;
-
-      containerEl.empty();
-
-      // Create a span element to display the current scroll speed
-      const scrollSpeedDisplay = containerEl.createEl('span', {
-          text: `Current scroll speed: ${this.plugin.settings.scrollSpeed}`
-      });
-
-      new Setting(containerEl)
-          .setName('Scroll Speed')
-          .setDesc('Adjust the scroll speed for j/k keys')
-          .addSlider(slider => 
-              slider.setLimits(10, 500, 10)
-                    .setValue(this.plugin.settings.scrollSpeed)
-                    .onChange(async (value) => {
-                        this.plugin.settings.scrollSpeed = value;
-                        await this.plugin.saveData(this.plugin.settings);
-
-                        // Update the display text when the slider value changes
-                        scrollSpeedDisplay.setText(`Current scroll speed: ${value}`);
-                    }));
-  }
-
 }
 

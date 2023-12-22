@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-navigator",
 	"name": "Navigator",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"minAppVersion": "0.15.0",
 	"description": "Obsidian Navigator is a powerful navigation plugin for Obsidian, inspired by the Vimium browser extension. It enhances the user experience in Obsidian by introducing efficient keyboard-based navigation and link selection features, enabling users to navigate their notes more fluidly and intuitively.",
 	"author": "Obsidian",

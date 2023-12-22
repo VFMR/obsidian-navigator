@@ -87,7 +87,7 @@ export default class NavigatorPlugin extends Plugin {
 
     private scroll(xSpeed: number, ySpeed: number) {
       const activeScrollableElement = this.getScrollContainer();
-      if (activeElement) {
+      if (activeScrollableElement) {
         activeScrollableElement.scrollBy(xSpeed, ySpeed);
       }
     }

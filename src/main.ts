@@ -44,6 +44,7 @@ export default class NavigatorPlugin extends Plugin {
     }
 
     private handleKeyPress(evt: KeyboardEvent) {
+
         if (!this.isInReadMode()) {
             return;
         }
@@ -64,14 +65,28 @@ export default class NavigatorPlugin extends Plugin {
             case 'f':
               this.enterLinkSelectionMode();
               break;
+            case 'G':
+              this.scrollToBottom();
+              break;
+            case 'g':
+              this.scrollToTop();
+              break;
         }
+    }
+
+    
+
+    private getScrollContainer() {
+      const activeLeaf = this.app.workspace.activeLeaf;
+      const activeElement = activeLeaf?.view.containerEl;
+      const activeScrollableElement = activeElement.querySelector('.markdown-preview-view.markdown-rendered.node-insert-event.is-readable-line-width.allow-fold-headings.show-indentation-guide.allow-fold-lists.show-properties');
+      return activeScrollableElement;
+        
     }
 
 
     private scroll(xSpeed: number, ySpeed: number) {
-      const activeLeaf = this.app.workspace.activeLeaf;
-      const activeElement = activeLeaf?.view.containerEl;
-      const activeScrollableElement = activeElement.querySelector('.markdown-preview-view.markdown-rendered.node-insert-event.is-readable-line-width.allow-fold-headings.show-indentation-guide.allow-fold-lists.show-properties');
+      const activeScrollableElement = this.getScrollContainer();
       if (activeElement) {
         activeScrollableElement.scrollBy(xSpeed, ySpeed);
       }
@@ -95,6 +110,22 @@ export default class NavigatorPlugin extends Plugin {
 
     private scrollRight() {
       this.scroll(-this.settings.scrollSpeed, 0)
+    }
+
+
+    private scrollToTop() {
+      const scrollContainer = this.getScrollContainer();
+      if (scrollContainer) {
+        scrollContainer.scrollTo(0, 0);
+      }
+    }
+
+
+    private scrollToBottom() {
+      const scrollContainer = this.getScrollContainer();
+      if (scrollContainer) {
+        scrollContainer.scrollTo(0, scrollContainer.scrollHeight);
+      }
     }
 
         

@@ -6,6 +6,11 @@ import { PluginSettingTab,
 import NavigatorPlugin from './main';
 
 
+export interface NavigatorPluginSettings {
+    scrollSpeed: number;
+}
+
+
 export default class NavigatorPluginSettingTab extends PluginSettingTab {
   plugin: NavigatorPlugin;
 

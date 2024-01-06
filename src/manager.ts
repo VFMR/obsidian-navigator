@@ -14,6 +14,8 @@ export default class NavigatorManager {
     private filteredLinks: HTMLAnchorElement[] = [];
     private keydownListener = (evt: KeyboardEvent) => this.listenKeydown(evt);
     private linkSelectionInput: string = '';
+    private filterDisplayBox: HTMLElement | null = null;
+
 
 
     startListening(plugin) {
@@ -157,10 +159,21 @@ export default class NavigatorManager {
     private getFilteredLinks() {
       this.resetLinkMap();
 
-      let links = Array.from(document.querySelectorAll('a, button, input'));
-      const filteredLinks = links.filter(link => 
-        link.classList.contains('internal-link') || link.classList.contains('external-link') || link.classList.contains('task-list-item-checkbox') || link.classList.contains('button-default')
-      ); 
+      let links = Array.from(document.querySelectorAll('a, button, input, div'));
+      const clickableClasses = ['internal-link',
+                                'external-link',
+                                'task-list-item-checkbox',
+                                'button-default',
+                                'markdown-embed-link',
+                                'copy-code-button'
+                                // 'multi-select-pill',
+                                // 'clickable-icon',
+                                // 'metadata-property-key-input'
+                                ]
+      const filteredLinks = links.filter(link =>
+        clickableClasses.some(className => link.classList.contains(className))
+      );
+
       if (this.filterInput) {
         const inputFilteredLinks = filteredLinks.filter(link => 
           link.innerText.toLowerCase().includes(this.filterInput.toLowerCase()));
@@ -177,6 +190,15 @@ export default class NavigatorManager {
     }
 
 
+    private createFilterDisplayBox() {
+        this.filterDisplayBox = document.createElement('div');
+        this.filterDisplayBox.classList.add('display-box');
+        this.filterDisplayBox.style.left = '0';
+        this.filterDisplayBox.style.bottom = '0';
+        this.filterDisplayBox.style.display = 'none'; // Initially hidden
+        document.body.appendChild(this.filterDisplayBox);
+    }
+    
 
     private updateOverlays(forNewTab: boolean = false) {
       if (this.isInLinkSelectionMode) {
@@ -223,7 +245,6 @@ export default class NavigatorManager {
 
     private checkInternalFileLink(link) {
       const href = link.href
-      // check if href is a string:
       if (typeof href == 'string') {
         if (href.startsWith('app://obsidian.md/')) {
           return true;
@@ -238,7 +259,6 @@ export default class NavigatorManager {
     private getInternalFileLink(link) {
       const href = link.href
       if (href.startsWith('app://obsidian.md/')) {
-        // return href.replace('app://obsidian.md/', '') as a string
         return href.replace('app://obsidian.md/', '');
       }
       return null;

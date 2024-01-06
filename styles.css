@@ -34,3 +34,10 @@ If your plugin does not need CSS, delete this file.
     border: 1px solid #000; /* Black border */
 }
 
+.filter-box {
+  position = 'fixed';
+  background-color = 'black';
+  color = 'white';
+  padding = '5px';
+}
+

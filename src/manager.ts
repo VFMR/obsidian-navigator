@@ -81,6 +81,11 @@ export default class NavigatorManager {
           this.enterLinkSelectionMode(true);
           break;
 
+        case 't':
+          // open new tab
+          this.app.workspace.getLeaf('tab');
+          break;
+
         case 'G':
           this.scrollToBottom();
           break;
@@ -218,10 +223,15 @@ export default class NavigatorManager {
 
     private checkInternalFileLink(link) {
       const href = link.href
-      if (href.startsWith('app://obsidian.md/')) {
-        return true;
+      // check if href is a string:
+      if (typeof href == 'string') {
+        if (href.startsWith('app://obsidian.md/')) {
+          return true;
+        }
+        return false;
+      } else {
+        return false;
       }
-      return false;
     }
 
 
@@ -240,10 +250,10 @@ export default class NavigatorManager {
         const link = this.linkMap.get(index);  
         if (this.openInNewTab) {
           if (this.checkInternalFileLink(link)) {
-            const newTab = this.app.workspace.getLeaf('tab');
             const internalFileLink = this.getInternalFileLink(link);
-            console.log('internal file Link: ', internalFileLink);
-            newTab.openFile(internalFileLink)
+            this.app.workspace.openLinkText(internalFileLink, '', 'tab');
+          } else {
+            link.click();
           }
         } else {
           link?.click();
@@ -315,6 +325,7 @@ export default class NavigatorManager {
         this.resetLinkMap();
         this.linkSelectionInput = '';
         this.openInNewTab = false;
+        this.filteredLinks = [];
         document.removeEventListener('keydown', this.keydownListener);
     }
 

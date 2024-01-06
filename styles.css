@@ -10,8 +10,9 @@ If your plugin does not need CSS, delete this file.
     position: absolute;
     /* background-color: var(--background-modifier-accent, yellow); */
     /* color: var(--text-on-accent, black); */
-    background-color: yellow; 
+    background-color: var(--color-yellow); 
     color: black; 
+    border: 1px solid #000; /* Black border */
     padding: 2px 5px;
     border-radius: 3px;
     font-size: 0.8em;
@@ -20,7 +21,7 @@ If your plugin does not need CSS, delete this file.
 }
 
 .new-tab-overlay {
-    background-color: #4CAF50; 
+    background-color: var(--color-orange); 
 }
 
 .markdown-preview-view {

@@ -1,6 +1,5 @@
-export class NavigatorManager {
+export default class NavigatorManager {
     constructor(private app: App, private settings: NavigatorPluginSettings) {
-        this.init();
         this.app = app;
         this.settings = settings;
     }

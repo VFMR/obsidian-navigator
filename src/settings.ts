@@ -11,7 +11,7 @@ export interface NavigatorPluginSettings {
 }
 
 
-export default class NavigatorPluginSettingTab extends PluginSettingTab {
+export class NavigatorPluginSettingTab extends PluginSettingTab {
   plugin: NavigatorPlugin;
 
   constructor(app: App, plugin: NavigatorPlugin) {

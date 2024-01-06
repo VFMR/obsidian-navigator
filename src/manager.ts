@@ -1,3 +1,5 @@
+import { TFile } from 'obsidian';
+
 export default class NavigatorManager {
     constructor(private app: App, private settings: NavigatorPluginSettings) {
         this.app = app;
@@ -214,11 +216,35 @@ export default class NavigatorManager {
     }
 
 
+    private checkInternalFileLink(link) {
+      const href = link.href
+      if (href.startsWith('app://obsidian.md/')) {
+        return true;
+      }
+      return false;
+    }
+
+
+    private getInternalFileLink(link) {
+      const href = link.href
+      if (href.startsWith('app://obsidian.md/')) {
+        // return href.replace('app://obsidian.md/', '') as a string
+        return href.replace('app://obsidian.md/', '');
+      }
+      return null;
+    }
+
+
     private clickLink(index: number, openInNewTab: boolean = false) {
       if (this.linkMap.has(index)) {
         const link = this.linkMap.get(index);  
         if (this.openInNewTab) {
-          window.open(link.href, '_blank');
+          if (this.checkInternalFileLink(link)) {
+            const newTab = this.app.workspace.getLeaf('tab');
+            const internalFileLink = this.getInternalFileLink(link);
+            console.log('internal file Link: ', internalFileLink);
+            newTab.openFile(internalFileLink)
+          }
         } else {
           link?.click();
         }

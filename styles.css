@@ -19,6 +19,10 @@ If your plugin does not need CSS, delete this file.
     /* Additional styling as needed */
 }
 
+.new-tab-overlay {
+    background-color: #4CAF50; 
+}
+
 .markdown-preview-view {
     scroll-behavior: smooth;
 }

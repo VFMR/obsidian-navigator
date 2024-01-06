@@ -5,6 +5,7 @@ export default class NavigatorManager {
     }
 
     private isInLinkSelectionMode: boolean = false;
+    private openInNewTab: boolean = false;
     private filterInput: string = '';
     private scrollableClassName: string = 'markdown-preview-view.markdown-rendered'
     private linkMap = new Map<number, HTMLAnchorElement>();
@@ -74,13 +75,16 @@ export default class NavigatorManager {
           this.enterLinkSelectionMode();
           break;
 
+        case 'F':
+          this.enterLinkSelectionMode(true);
+          break;
+
         case 'G':
           this.scrollToBottom();
           break;
 
         case 'g':
           this.scrollToTop();
-          break;
       }
     }
 
@@ -167,7 +171,7 @@ export default class NavigatorManager {
 
 
 
-    private updateOverlays() {
+    private updateOverlays(forNewTab: boolean = false) {
       if (this.isInLinkSelectionMode) {
         this.removeOverlays();
 
@@ -187,6 +191,9 @@ export default class NavigatorManager {
 
           // styling
           overlay.classList.add('vimium-like-link-overlay');
+          if (forNewTab) {
+            overlay.classList.add('new-tab-overlay'); // A different class for new tab overlays
+          }
           if (index === 0) {  // special styling for default link
             overlay.classList.add('default-link-overlay')
           }
@@ -207,10 +214,14 @@ export default class NavigatorManager {
     }
 
 
-    private clickLink(index) {
+    private clickLink(index: number, openInNewTab: boolean = false) {
       if (this.linkMap.has(index)) {
         const link = this.linkMap.get(index);  
-        link?.click();
+        if (this.openInNewTab) {
+          window.open(link.href, '_blank');
+        } else {
+          link?.click();
+        }
         this.leaveLinkSelectionMode();
         document.removeEventListener('keydown', this.keydownListener);
       }
@@ -246,19 +257,26 @@ export default class NavigatorManager {
       } else if (evt.key.length === 1 && /[a-zA-Z]/.test(evt.key)) {
         this.updateFilterInput(evt.key);
         this.getFilteredLinks();
-        this.updateOverlays();
+        this.updateOverlays(this.openInNewTab);
       }
     }
 
 
-    private enterLinkSelectionMode() {
+    private enterLinkSelectionMode(forNewTab: boolean = false) {
       if (!this.isInReadMode()) {
             return;
         }
+
+      if (forNewTab) {
+        this.openInNewTab = true;
+      }
+      else {
+        this.openInNewTab = false
+      }
       this.isInLinkSelectionMode = true;
       this.filterInput = '';
       this.getFilteredLinks();
-      this.updateOverlays();
+      this.updateOverlays(forNewTab);
 
       document.addEventListener('keydown', this.keydownListener);
     }
@@ -270,6 +288,7 @@ export default class NavigatorManager {
         this.filterInput = '';
         this.resetLinkMap();
         this.linkSelectionInput = '';
+        this.openInNewTab = false;
         document.removeEventListener('keydown', this.keydownListener);
     }
 

@@ -48,31 +48,26 @@ export default class NavigatorManager {
       if (!this.isInReadMode()) {
           return;
       }
+      if (this.isInLinkSelectionMode) {
+        return;
+      }
 
       switch (evt.key) {
 
         case 'j':
-          if (!this.isInLinkSelectionMode) {
             this.scrollDown();
-          }
           break;
 
          case 'k':
-          if (!this.isInLinkSelectionMode) {
             this.scrollUp();
-          }
           break;
 
          case 'h':
-          if (!this.isInLinkSelectionMode) {
             this.scrollUp();
-          }
           break;
 
          case 'l':
-          if (!this.isInLinkSelectionMode) {
             this.scrollUp();
-          }
           break;
 
         case 'f':
@@ -196,17 +191,6 @@ export default class NavigatorManager {
     private createFilterDisplayBox() {
         this.filterDisplayBox = document.createElement('div');
         this.filterDisplayBox.classList.add('navigator-filter-box');
-        // this.filterDisplayBox.style.left = '0';
-        // this.filterDisplayBox.style.bottom = '0';
-        // this.filterDisplayBox.style.display = 'none'; // Initially hidden
-        // this.filterDisplayBox.style.position = 'fixed';
-        // this.filterDisplayBox.style.zIndex = '1000'; 
-        // this.filterDisplayBox.style.width = 'auto'; 
-        // this.filterDisplayBox.style.height = 'auto';
-        // this.filterDisplayBox.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        // this.filterDisplayBox.style.color = 'white';
-        // this.filterDisplayBox.style.padding = '5px';
-
         document.body.appendChild(this.filterDisplayBox);
     }
     
@@ -307,7 +291,7 @@ export default class NavigatorManager {
         this.leaveLinkSelectionMode();
 
       // number: select link
-      } else if (evt.key.length === 1 && /[0-9]/.test(evt.key)) { // check if the key is a number
+      } else if (evt.key.length === 1 && /[0-9]/.test(evt.key)) { 
         this.linkSelectionInput += evt.key;
         const key = parseInt(this.linkSelectionInput, 10);
         if (this.linkMap.has(key)) {

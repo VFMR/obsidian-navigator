@@ -34,10 +34,20 @@ If your plugin does not need CSS, delete this file.
     border: 1px solid #000; /* Black border */
 }
 
-.filter-box {
-  position = 'fixed';
-  background-color = 'black';
-  color = 'white';
-  padding = '5px';
+.navigator-filter-box {
+  position: fixed;
+  background-color: rgba(0,0,0,0.8);
+  color: white;
+  padding: 8px;
+  left: 35px;
+  bottom: 10px;
+  display: none;
+  width: auto;
+  height: auto;
+  z-index: 100;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); 
+  font-size: 0.9em;
+  border: 1px solid #000;
 }
 

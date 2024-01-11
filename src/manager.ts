@@ -17,7 +17,6 @@ export default class NavigatorManager {
     private filterDisplayBox: HTMLElement | null = null;
 
 
-
     startListening(plugin) {
         plugin.registerDomEvent(document, 'keydown', (evt: KeyboardEvent) => {
             this.handleKeyPress(evt);
@@ -30,6 +29,7 @@ export default class NavigatorManager {
         );
 
         window.addEventListener('scroll', this.updateOverlays.bind(this), true);
+        this.createFilterDisplayBox();
     }
 
 
@@ -165,7 +165,10 @@ export default class NavigatorManager {
                                 'task-list-item-checkbox',
                                 'button-default',
                                 'markdown-embed-link',
-                                'copy-code-button'
+                                // 'copy-code-button',
+                                // 'internal-embed',
+                                'code-block-flair',
+                                'collapse-indicator'
                                 // 'multi-select-pill',
                                 // 'clickable-icon',
                                 // 'metadata-property-key-input'
@@ -192,10 +195,18 @@ export default class NavigatorManager {
 
     private createFilterDisplayBox() {
         this.filterDisplayBox = document.createElement('div');
-        this.filterDisplayBox.classList.add('display-box');
-        this.filterDisplayBox.style.left = '0';
-        this.filterDisplayBox.style.bottom = '0';
-        this.filterDisplayBox.style.display = 'none'; // Initially hidden
+        this.filterDisplayBox.classList.add('navigator-filter-box');
+        // this.filterDisplayBox.style.left = '0';
+        // this.filterDisplayBox.style.bottom = '0';
+        // this.filterDisplayBox.style.display = 'none'; // Initially hidden
+        // this.filterDisplayBox.style.position = 'fixed';
+        // this.filterDisplayBox.style.zIndex = '1000'; 
+        // this.filterDisplayBox.style.width = 'auto'; 
+        // this.filterDisplayBox.style.height = 'auto';
+        // this.filterDisplayBox.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        // this.filterDisplayBox.style.color = 'white';
+        // this.filterDisplayBox.style.padding = '5px';
+
         document.body.appendChild(this.filterDisplayBox);
     }
     
@@ -314,6 +325,16 @@ export default class NavigatorManager {
         this.updateFilterInput(evt.key);
         this.getFilteredLinks();
         this.updateOverlays(this.openInNewTab);
+        this.updateFilterDisplayBox();
+      }
+    }
+
+
+    private updateFilterDisplayBox() {
+      if (this.filterDisplayBox) {
+        this.filterDisplayBox.textContent = `Filter: ${this.filterInput}`
+        this.filterDisplayBox.style.display = 'block'
+        console.log(this.filterDisplayBox)
       }
     }
 
@@ -346,6 +367,9 @@ export default class NavigatorManager {
         this.linkSelectionInput = '';
         this.openInNewTab = false;
         this.filteredLinks = [];
+        if (this.filterDisplayBox) {
+          this.filterDisplayBox.style.display = 'none';
+        }
         document.removeEventListener('keydown', this.keydownListener);
     }
 

@@ -318,7 +318,6 @@ export default class NavigatorManager {
       if (this.filterDisplayBox) {
         this.filterDisplayBox.textContent = `Filter: ${this.filterInput}`
         this.filterDisplayBox.style.display = 'block'
-        console.log(this.filterDisplayBox)
       }
     }
 

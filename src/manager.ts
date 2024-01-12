@@ -12,31 +12,56 @@ export default class NavigatorManager {
     private scrollableClassName: string = 'markdown-preview-view.markdown-rendered'
     private linkMap = new Map<number, HTMLAnchorElement>();
     private filteredLinks: HTMLAnchorElement[] = [];
-    private keydownListener = (evt: KeyboardEvent) => this.listenKeydown(evt);
+    // private keydownListener = (evt: KeyboardEvent) => this.listenKeydown(evt);
     private linkSelectionInput: string = '';
     private filterDisplayBox: HTMLElement | null = null;
 
 
-    startListening(plugin) {
-        plugin.registerDomEvent(document, 'keydown', (evt: KeyboardEvent) => {
-            this.handleKeyPress(evt);
-        });
+    startManager(plugin) {
+      this.createFilterDisplayBox();
 
-        plugin.registerEvent(
-            this.app.workspace.on('active-leaf-change', () => {
-                this.leaveLinkSelectionMode();
-            })
-        );
+      plugin.registerEvent(
+          this.app.workspace.on('active-leaf-change', () => {
+              this.leaveLinkSelectionMode();
 
-        window.addEventListener('scroll', this.updateOverlays.bind(this), true);
-        this.createFilterDisplayBox();
+              if (this.isInMarkdownReadMode()) {
+                this.startListening();
+              } else {
+                this.stopListening();
+              }
+          })
+      );
     }
 
 
-    stopListening() {
-        window.removeEventListener('scroll', 
-                                   this.updateOverlays.bind(this), true);
+    stopManager() {
+      this.stopListening();
     }
+
+
+    private startListening() {
+      document.addEventListener('keydown', this.keydownListener);
+      window.addEventListener('scroll', this.updateOverlays.bind(this), true);
+    }
+
+
+    private stopListening() {
+      document.removeEventListener('keydown', this.keydownListener);
+      window.removeEventListener('scroll', this.updateOverlays.bind(this), true);
+    }
+
+
+    private isInMarkdownReadMode(): boolean {
+      const activeLeaf = this.app.workspace.activeLeaf;
+      return activeLeaf?.view.getViewType() === 'markdown' // && !activeLeaf.view.getState().mode;
+    }
+
+
+    private keydownListener = (evt: KeyboardEvent) => {
+      if (this.isInMarkdownReadMode()) {
+          this.handleKeyPress(evt);
+      }
+    };
 
 
     private resetLinkMap() {
@@ -45,50 +70,61 @@ export default class NavigatorManager {
 
 
     private handleKeyPress(evt: KeyboardEvent) {
-      if (!this.isInReadMode()) {
+      if (!this.isInMarkdownReadMode()) {
           return;
       }
+
+      // Link Selection Mode
       if (this.isInLinkSelectionMode) {
-        return;
-      }
+        if (evt.key === 'Escape') {
+          this.leaveLinkSelectionMode();
 
-      switch (evt.key) {
+        // number: select link
+        } else if (evt.key.length === 1 && /[0-9]/.test(evt.key)) { 
+          this.linkSelectionInput += evt.key;
+          const key = parseInt(this.linkSelectionInput, 10);
+          if (this.linkMap.has(key)) {
+            this.clickLink(key)
+            this.linkSelectionInput = '';
+          }
 
-        case 'j':
-            this.scrollDown();
-          break;
+        // Enter: select default link
+        } else if (evt.key === 'Enter') {
+          let defaultKey = this.linkMap.keys().next().value
+          this.clickLink(defaultKey)
 
-         case 'k':
-            this.scrollUp();
-          break;
+        // Alphabet character: filter links
+        } else if (evt.key.length === 1 && /[a-zA-Z]/.test(evt.key)) {
+          this.updateFilterInput(evt.key);
+          this.getFilteredLinks();
+          this.updateOverlays();
+          this.updateFilterDisplayBox();
+        }
 
-         case 'h':
-            this.scrollUp();
-          break;
-
-         case 'l':
-            this.scrollUp();
-          break;
-
-        case 'f':
-          this.enterLinkSelectionMode();
-          break;
-
-        case 'F':
-          this.enterLinkSelectionMode(true);
-          break;
-
-        case 't':
-          // open new tab
-          this.app.workspace.getLeaf('tab');
-          break;
-
-        case 'G':
+      // Markdown Read Mode
+      } else {
+        this.normalModeInput = ''
+        if (evt.key === 'j') {
+          this.scrollDown();
+        } else if (evt.key === 'k') {
+          this.scrollUp();
+        } else if (evt.key === 'h') {
+          this.scrollLeft();
+        } else if (evt.key === 'k') {
+          this.scrollRight();
+        } else if (evt.key === 'G') {
           this.scrollToBottom();
-          break;
-
-        case 'g':
-          this.scrollToTop();
+        } else if (evt.key === 'g') {
+          this.scrollToBottom();
+        } else if (evt.key === 'k') {
+          this.scrollRight();
+        } else if (evt.key === 't') {
+          this.app.workspace.getLeaf('tab')
+        } else if (evt.key === 'f') {
+          this.enterLinkSelectionMode();
+        } else if (evt.key === 'F') {
+          this.enterLinkSelectionMode(true);
+        }
       }
     }
 
@@ -145,10 +181,10 @@ export default class NavigatorManager {
     }
 
         
-    private isInReadMode(): boolean {
-        const activeLeaf = this.app.workspace.activeLeaf;
-        return activeLeaf?.view.getViewType() === 'markdown'; // && !activeLeaf.view.getState().mode;
-    }
+    // private isInReadMode(): boolean {
+    //     const activeLeaf = this.app.workspace.activeLeaf;
+    //     return activeLeaf?.view.getViewType() === 'markdown'; // && !activeLeaf.view.getState().mode;
+    // }
 
 
     private getFilteredLinks() {
@@ -195,7 +231,7 @@ export default class NavigatorManager {
     }
     
 
-    private updateOverlays(forNewTab: boolean = false) {
+    private updateOverlays() {
       if (this.isInLinkSelectionMode) {
         this.removeOverlays();
 
@@ -215,7 +251,7 @@ export default class NavigatorManager {
 
           // styling
           overlay.classList.add('vimium-like-link-overlay');
-          if (forNewTab) {
+          if (this.openInNewTab) {
             overlay.classList.add('new-tab-overlay'); // A different class for new tab overlays
           }
           if (index === 0) {  // special styling for default link
@@ -284,35 +320,6 @@ export default class NavigatorManager {
     }
 
 
-    private listenKeydown(evt: KeyboardEvent) {
-
-      // Escape: leave link selection mode
-      if (evt.key === 'Escape') {
-        this.leaveLinkSelectionMode();
-
-      // number: select link
-      } else if (evt.key.length === 1 && /[0-9]/.test(evt.key)) { 
-        this.linkSelectionInput += evt.key;
-        const key = parseInt(this.linkSelectionInput, 10);
-        if (this.linkMap.has(key)) {
-          this.clickLink(key)
-          this.linkSelectionInput = '';
-        }
-
-      // Enter: select default link
-      } else if (evt.key === 'Enter') {
-        let defaultKey = this.linkMap.keys().next().value
-        this.clickLink(defaultKey)
-
-      // Alphabet character: filter links
-      } else if (evt.key.length === 1 && /[a-zA-Z]/.test(evt.key)) {
-        this.updateFilterInput(evt.key);
-        this.getFilteredLinks();
-        this.updateOverlays(this.openInNewTab);
-        this.updateFilterDisplayBox();
-      }
-    }
-
 
     private updateFilterDisplayBox() {
       if (this.filterDisplayBox) {
@@ -323,7 +330,7 @@ export default class NavigatorManager {
 
 
     private enterLinkSelectionMode(forNewTab: boolean = false) {
-      if (!this.isInReadMode()) {
+      if (!this.isInMarkdownReadMode()) {
             return;
         }
 
@@ -336,9 +343,7 @@ export default class NavigatorManager {
       this.isInLinkSelectionMode = true;
       this.filterInput = '';
       this.getFilteredLinks();
-      this.updateOverlays(forNewTab);
-
-      document.addEventListener('keydown', this.keydownListener);
+      this.updateOverlays();
     }
 
 
@@ -353,7 +358,6 @@ export default class NavigatorManager {
         if (this.filterDisplayBox) {
           this.filterDisplayBox.style.display = 'none';
         }
-        document.removeEventListener('keydown', this.keydownListener);
     }
 
 }

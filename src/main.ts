@@ -18,13 +18,13 @@ export default class NavigatorPlugin extends Plugin {
         await this.loadSettings();
         this.addSettingTab(new NavigatorPluginSettingTab(this.app, this));
         this.navigatorManager = new NavigatorManager(this.app, this.settings);
-        this.navigatorManager.startListening(this);
+        this.navigatorManager.startManager(this);
     }
 
 
     onunload() {
         this.saveData(this.settings);
-        this.navigatorManager.stopListening();
+        this.navigatorManager.stopManager();
     }
 
 

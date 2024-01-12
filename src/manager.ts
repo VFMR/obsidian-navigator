@@ -1,4 +1,4 @@
-import { TFile } from 'obsidian';
+import { TFile, debounce } from 'obsidian';
 
 export default class NavigatorManager {
     constructor(private app: App, private settings: NavigatorPluginSettings) {
@@ -15,6 +15,10 @@ export default class NavigatorManager {
     // private keydownListener = (evt: KeyboardEvent) => this.listenKeydown(evt);
     private linkSelectionInput: string = '';
     private filterDisplayBox: HTMLElement | null = null;
+
+    private handleKeyPress = debounce((evt: KeyboardEvent) => {
+      this.handleKeyPressFunc(evt);
+    }, 50);
 
 
     startManager(plugin) {
@@ -38,6 +42,9 @@ export default class NavigatorManager {
       this.stopListening();
     }
 
+    private isModalOpen(): boolean {
+      return document.querySelector('.modal') !== null;
+    }
 
     private startListening() {
       document.addEventListener('keydown', this.keydownListener);
@@ -69,9 +76,13 @@ export default class NavigatorManager {
     }
 
 
-    private handleKeyPress(evt: KeyboardEvent) {
+    private handleKeyPressFunc(evt: KeyboardEvent) {
       if (!this.isInMarkdownReadMode()) {
           return;
+      }
+      if (this.isModalOpen()) {
+        this.leaveLinkSelectionMode();
+        return;
       }
 
       // Link Selection Mode
@@ -310,7 +321,6 @@ export default class NavigatorManager {
           link?.click();
         }
         this.leaveLinkSelectionMode();
-        document.removeEventListener('keydown', this.keydownListener);
       }
     }
 

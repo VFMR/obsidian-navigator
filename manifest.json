@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-navigator",
 	"name": "Navigator",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"minAppVersion": "0.15.0",
 	"description": "Navigate between notes using the keyboard",
 	"author": "Obsidian",

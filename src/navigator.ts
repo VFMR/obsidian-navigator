@@ -1,6 +1,7 @@
 import { TFile, debounce } from 'obsidian';
 import NavigatorScroll  from './scroll';
 import NavigatorPluginSettings from './settings'
+import LinkFilter from './links'
 
 
 export default class Navigator {
@@ -11,20 +12,16 @@ export default class Navigator {
 
     private isInLinkSelectionMode: boolean = false;
     private openInNewTab: boolean = false;
-    private filterInput: string = '';
-    private linkMap = new Map<number, HTMLAnchorElement>();
-    private filteredLinks: HTMLAnchorElement[] = [];
-    private linkSelectionInput: string = '';
-    private filterDisplayBox: HTMLElement | null = null;
     private scroller: NavigatorScroll = new NavigatorScroll(this.app, this.settings);
+    private linkFilter: LinkFilter = new LinkFilter(this.app);
 
     private handleKeyPress = debounce((evt: KeyboardEvent) => {
       this.handleKeyPressFunc(evt);
     }, 50);
 
 
-    startManager(plugin) {
-      this.createFilterDisplayBox();
+    startNavigator(plugin) {
+      this.linkFilter.createFilterDisplayBox();
 
       // plugin.registerDomEvent(window, 'scroll', this.throttle(this.myFunction, 200));
 
@@ -42,7 +39,7 @@ export default class Navigator {
     }
 
 
-    stopManager() {
+    stopNavigator() {
       this.stopListening();
     }
 
@@ -83,11 +80,6 @@ export default class Navigator {
     };
 
 
-    private resetLinkMap() {
-      this.linkMap = new Map<number, HTMLAnchorElement>();
-    }
-
-
     // Throttling function to limit how often a function can run
     private throttle(func, limit) {
         let inThrottle;
@@ -121,22 +113,22 @@ export default class Navigator {
         } else if (evt.key.length === 1 && /[0-9]/.test(evt.key)) { 
           this.linkSelectionInput += evt.key;
           const key = parseInt(this.linkSelectionInput, 10);
-          if (this.linkMap.has(key)) {
-            this.clickLink(key)
-            this.linkSelectionInput = '';
+          if (this.linkFilter.check(key)) {
+            this.linkFilter.clickLink(key, this.openInNewTab)
+            this.leaveLinkSelectionMode();
+            // this.linkSelectionInput = '';
           }
 
         // Enter: select default link
         } else if (evt.key === 'Enter') {
-          let defaultKey = this.linkMap.keys().next().value
-          this.clickLink(defaultKey)
+          let defaultKey = this.linkFilter.getDefaultLink();
+          this.linkFilter.clickLink(defaultKey, this.openInNewTab);
+          this.leaveLinkSelectionMode();
 
         // Alphabet character: filter links
         } else if (evt.key.length === 1 && /[a-zA-Z]/.test(evt.key)) {
-          this.updateFilterInput(evt.key);
-          this.getFilteredLinks();
+          this.linkFilter.update(evt.key);
           this.updateOverlays();
-          this.updateFilterDisplayBox();
         }
 
       // Markdown Read Mode
@@ -166,42 +158,6 @@ export default class Navigator {
       }
     }
 
-    // private isInReadMode(): boolean {
-    //     const activeLeaf = this.app.workspace.activeLeaf;
-    //     return activeLeaf?.view.getViewType() === 'markdown'; // && !activeLeaf.view.getState().mode;
-    // }
-
-
-    private getFilteredLinks() {
-      this.resetLinkMap();
-
-      let links = Array.from(document.querySelectorAll('a, button, input, div'));
-      const clickableClasses = ['internal-link',
-                                'external-link',
-                                'task-list-item-checkbox',
-                                'button-default',
-                                'markdown-embed-link',
-                                // 'copy-code-button',
-                                // 'internal-embed',
-                                'code-block-flair',
-                                'collapse-indicator'
-                                // 'multi-select-pill',
-                                // 'clickable-icon',
-                                // 'metadata-property-key-input'
-                                ]
-      const filteredLinks = links.filter(link =>
-        clickableClasses.some(className => link.classList.contains(className))
-      );
-
-      if (this.filterInput) {
-        const inputFilteredLinks = filteredLinks.filter(link => 
-          link.innerText.toLowerCase().includes(this.filterInput.toLowerCase()));
-          this.filteredLinks = inputFilteredLinks;
-      } else {
-        this.filteredLinks = filteredLinks;
-      }
-    }
-
 
     private removeOverlays() {
         document.querySelectorAll('.vimium-like-link-overlay').forEach(el => el.remove()); 
@@ -209,24 +165,16 @@ export default class Navigator {
     }
 
 
-    private createFilterDisplayBox() {
-        this.filterDisplayBox = document.createElement('div');
-        this.filterDisplayBox.classList.add('navigator-filter-box');
-        document.body.appendChild(this.filterDisplayBox);
-    }
-    
-
     private updateOverlays() {
       if (this.isInLinkSelectionMode) {
         this.removeOverlays();
 
         let startDigitsAt = 1;
-        if (this.filteredLinks.length > 9) {
-          startDigitsAt = Math.ceil(this.filteredLinks.length / 10) + 1;
+        if (this.linkFilter.filteredLinks.length > 9) {
+          startDigitsAt = Math.ceil(this.linkFilter.filteredLinks.length / 10) + 1;
         }
 
-
-        this.filteredLinks.forEach((link, index) => {
+        this.linkFilter.filteredLinks.forEach((link, index) => {
           const overlay = document.createElement('div');
 
           const computedStyle = window.getComputedStyle(link)
@@ -253,62 +201,8 @@ export default class Navigator {
           overlay.style.left = `${rect.left + offsetX}px`;
           overlay.style.top = `${rect.top + offsetY}px`;
 
-          this.linkMap.set(linkNumber, link);
+          this.linkFilter.setLinkMap(linkNumber, link);
         });
-      }
-    }
-
-
-    private checkInternalFileLink(link) {
-      const href = link.href
-      if (typeof href == 'string') {
-        if (href.startsWith('app://obsidian.md/')) {
-          return true;
-        }
-        return false;
-      } else {
-        return false;
-      }
-    }
-
-
-    private getInternalFileLink(link) {
-      const href = link.href
-      if (href.startsWith('app://obsidian.md/')) {
-        return href.replace('app://obsidian.md/', '');
-      }
-      return null;
-    }
-
-
-    private clickLink(index: number, openInNewTab: boolean = false) {
-      if (this.linkMap.has(index)) {
-        const link = this.linkMap.get(index);  
-        if (this.openInNewTab) {
-          if (this.checkInternalFileLink(link)) {
-            const internalFileLink = this.getInternalFileLink(link);
-            this.app.workspace.openLinkText(internalFileLink, '', 'tab');
-          } else {
-            link.click();
-          }
-        } else {
-          link?.click();
-        }
-        this.leaveLinkSelectionMode();
-      }
-    }
-
-
-    private updateFilterInput(key) {
-      this.filterInput += key;
-    }
-
-
-
-    private updateFilterDisplayBox() {
-      if (this.filterDisplayBox) {
-        this.filterDisplayBox.textContent = `Filter: ${this.filterInput}`
-        this.filterDisplayBox.style.display = 'block'
       }
     }
 
@@ -325,8 +219,8 @@ export default class Navigator {
         this.openInNewTab = false
       }
       this.isInLinkSelectionMode = true;
-      this.filterInput = '';
-      this.getFilteredLinks();
+      this.linkFilter.reset();
+      this.linkFilter.update();
       this.updateOverlays();
     }
 
@@ -334,14 +228,8 @@ export default class Navigator {
     private leaveLinkSelectionMode() {
         this.removeOverlays();
         this.isInLinkSelectionMode = false;
-        this.filterInput = '';
-        this.resetLinkMap();
-        this.linkSelectionInput = '';
         this.openInNewTab = false;
-        this.filteredLinks = [];
-        if (this.filterDisplayBox) {
-          this.filterDisplayBox.style.display = 'none';
-        }
+        this.linkFilter.reset();
     }
 
 }

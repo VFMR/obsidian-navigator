@@ -31,8 +31,8 @@ export default class LinkFilter {
   }
 
 
-  checkLinkMap(index) {
-    if (this.linkMap.has(index)) {
+  checkLinkMap(key: number) {
+    if (this.linkMap.has(key)) {
       return true;
     }
     return false;
@@ -76,7 +76,7 @@ export default class LinkFilter {
   }
 
 
-  private updateFilterInput(key) {
+  updateFilterInput(key) {
     this.filterInput += key;
   }
 

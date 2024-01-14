@@ -2,6 +2,7 @@ import { TFile, debounce } from 'obsidian';
 import NavigatorScroll  from './scroll';
 import NavigatorPluginSettings from './settings'
 import LinkFilter from './links'
+import Overlay from './overlays'
 
 
 export default class Navigator {
@@ -14,6 +15,33 @@ export default class Navigator {
     private openInNewTab: boolean = false;
     private scroller: NavigatorScroll = new NavigatorScroll(this.app, this.settings);
     private linkFilter: LinkFilter = new LinkFilter(this.app);
+    private overlays: Overlay[] = [];
+    private linkSelectionInput: string = '';
+
+
+    private removeOverlays() {
+      this.overlays.forEach(overlay => overlay.remove());
+    }
+
+
+    private updateOverlays() {
+      if (this.isInLinkSelectionMode) {
+        this.removeOverlays();
+
+        let startDigitsAt = 1;
+        if (this.linkFilter.filteredLinks.length > 9) {
+          startDigitsAt = Math.ceil(this.linkFilter.filteredLinks.length / 10) + 1;
+        }
+
+        this.linkFilter.filteredLinks.forEach((link, index) => {
+          let linkNumber = index + startDigitsAt;
+          const newOverlay = new Overlay(link, index, linkNumber, this.openInNewTab);
+          this.overlays.push(newOverlay);
+          this.linkFilter.setLinkMap(linkNumber, link);
+        });
+      }
+    }
+
 
     private handleKeyPress = debounce((evt: KeyboardEvent) => {
       this.handleKeyPressFunc(evt);
@@ -113,10 +141,10 @@ export default class Navigator {
         } else if (evt.key.length === 1 && /[0-9]/.test(evt.key)) { 
           this.linkSelectionInput += evt.key;
           const key = parseInt(this.linkSelectionInput, 10);
-          if (this.linkFilter.check(key)) {
+          if (this.linkFilter.checkLinkMap(key)) {
             this.linkFilter.clickLink(key, this.openInNewTab)
             this.leaveLinkSelectionMode();
-            // this.linkSelectionInput = '';
+            this.linkSelectionInput = '';
           }
 
         // Enter: select default link
@@ -158,53 +186,6 @@ export default class Navigator {
       }
     }
 
-
-    private removeOverlays() {
-        document.querySelectorAll('.vimium-like-link-overlay').forEach(el => el.remove()); 
-        document.querySelectorAll('.default-link-overlay').forEach(el => el.remove()); 
-    }
-
-
-    private updateOverlays() {
-      if (this.isInLinkSelectionMode) {
-        this.removeOverlays();
-
-        let startDigitsAt = 1;
-        if (this.linkFilter.filteredLinks.length > 9) {
-          startDigitsAt = Math.ceil(this.linkFilter.filteredLinks.length / 10) + 1;
-        }
-
-        this.linkFilter.filteredLinks.forEach((link, index) => {
-          const overlay = document.createElement('div');
-
-          const computedStyle = window.getComputedStyle(link)
-          const fontSize = parseFloat(computedStyle.fontSize);
-          const offsetX = -fontSize ;
-          const offsetY = -fontSize / 2;
-
-          // styling
-          overlay.classList.add('vimium-like-link-overlay');
-          if (this.openInNewTab) {
-            overlay.classList.add('new-tab-overlay'); // A different class for new tab overlays
-          }
-          if (index === 0) {  // special styling for default link
-            overlay.classList.add('default-link-overlay')
-          }
-
-          let linkNumber = index + startDigitsAt;
-
-          overlay.textContent = (linkNumber).toString();
-
-          document.body.appendChild(overlay);
-
-          const rect = link.getBoundingClientRect();
-          overlay.style.left = `${rect.left + offsetX}px`;
-          overlay.style.top = `${rect.top + offsetY}px`;
-
-          this.linkFilter.setLinkMap(linkNumber, link);
-        });
-      }
-    }
 
 
     private enterLinkSelectionMode(forNewTab: boolean = false) {

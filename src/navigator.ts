@@ -1,7 +1,9 @@
 import { TFile, debounce } from 'obsidian';
+import NavigatorScroll  from './scroll';
+import NavigatorPluginSettings from './settings'
 
 
-export default class NavigatorManager {
+export default class Navigator {
     constructor(private app: App, private settings: NavigatorPluginSettings) {
         this.app = app;
         this.settings = settings;
@@ -10,11 +12,11 @@ export default class NavigatorManager {
     private isInLinkSelectionMode: boolean = false;
     private openInNewTab: boolean = false;
     private filterInput: string = '';
-    private scrollableClassName: string = 'markdown-preview-view.markdown-rendered'
     private linkMap = new Map<number, HTMLAnchorElement>();
     private filteredLinks: HTMLAnchorElement[] = [];
     private linkSelectionInput: string = '';
     private filterDisplayBox: HTMLElement | null = null;
+    private scroller: NavigatorScroll = new NavigatorScroll(this.app, this.settings);
 
     private handleKeyPress = debounce((evt: KeyboardEvent) => {
       this.handleKeyPressFunc(evt);
@@ -49,7 +51,6 @@ export default class NavigatorManager {
       if (modal === null) {
         modal = document.querySelector('.modal-container');
       }
-      console.log('Modal open: ', modal !== null);
       return modal !== null;
     }
 
@@ -142,19 +143,19 @@ export default class NavigatorManager {
       } else {
         this.normalModeInput = ''
         if (evt.key === 'j') {
-          this.scrollDown();
+          this.scroller.scrollDown();
         } else if (evt.key === 'k') {
-          this.scrollUp();
+          this.scroller.scrollUp();
         } else if (evt.key === 'h') {
-          this.scrollLeft();
+          this.scroller.scrollLeft();
         } else if (evt.key === 'k') {
-          this.scrollRight();
+          this.scroller.scrollRight();
         } else if (evt.key === 'G') {
-          this.scrollToBottom();
+          this.scroller.scrollToBottom();
         } else if (evt.key === 'g') {
-          this.scrollToBottom();
+          this.scroller.scrollToBottom();
         } else if (evt.key === 'k') {
-          this.scrollRight();
+          this.scroller.scrollRight();
         } else if (evt.key === 't') {
           this.app.workspace.getLeaf('tab')
         } else if (evt.key === 'f') {
@@ -165,59 +166,6 @@ export default class NavigatorManager {
       }
     }
 
-
-    private getScrollContainer() {
-      const activeLeaf = this.app.workspace.activeLeaf;
-      const activeElement = activeLeaf?.view.containerEl;
-      const activeScrollableElement = activeElement.querySelector('.markdown-preview-view.markdown-rendered');
-      return activeScrollableElement;
-    }
-
-
-    private scroll(xSpeed: number, ySpeed: number) {
-      const activeScrollableElement = this.getScrollContainer();
-      if (activeScrollableElement) {
-        activeScrollableElement.scrollBy(xSpeed, ySpeed);
-      }
-    }
-
-
-    private scrollDown() {
-      this.scroll(0, this.settings.scrollSpeed)
-    }
-
-
-    private scrollUp() {
-      this.scroll(0, -this.settings.scrollSpeed)
-    }
-
-
-    private scrollLeft() {
-      this.scroll(this.settings.scrollSpeed, 0)
-    }
-
-
-    private scrollRight() {
-      this.scroll(-this.settings.scrollSpeed, 0)
-    }
-
-
-    private scrollToTop() {
-      const scrollContainer = this.getScrollContainer();
-      if (scrollContainer) {
-        scrollContainer.scrollTo(0, 0);
-      }
-    }
-
-
-    private scrollToBottom() {
-      const scrollContainer = this.getScrollContainer();
-      if (scrollContainer) {
-        scrollContainer.scrollTo(0, scrollContainer.scrollHeight);
-      }
-    }
-
-        
     // private isInReadMode(): boolean {
     //     const activeLeaf = this.app.workspace.activeLeaf;
     //     return activeLeaf?.view.getViewType() === 'markdown'; // && !activeLeaf.view.getState().mode;

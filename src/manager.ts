@@ -1,5 +1,6 @@
 import { TFile, debounce } from 'obsidian';
 
+
 export default class NavigatorManager {
     constructor(private app: App, private settings: NavigatorPluginSettings) {
         this.app = app;
@@ -12,7 +13,6 @@ export default class NavigatorManager {
     private scrollableClassName: string = 'markdown-preview-view.markdown-rendered'
     private linkMap = new Map<number, HTMLAnchorElement>();
     private filteredLinks: HTMLAnchorElement[] = [];
-    // private keydownListener = (evt: KeyboardEvent) => this.listenKeydown(evt);
     private linkSelectionInput: string = '';
     private filterDisplayBox: HTMLElement | null = null;
 
@@ -23,6 +23,8 @@ export default class NavigatorManager {
 
     startManager(plugin) {
       this.createFilterDisplayBox();
+
+      // plugin.registerDomEvent(window, 'scroll', this.throttle(this.myFunction, 200));
 
       plugin.registerEvent(
           this.app.workspace.on('active-leaf-change', () => {
@@ -43,12 +45,21 @@ export default class NavigatorManager {
     }
 
     private isModalOpen(): boolean {
-      return document.querySelector('.modal') !== null;
+      let modal = document.querySelector('.modal');
+      if (modal === null) {
+        modal = document.querySelector('.modal-container');
+      }
+      console.log('Modal open: ', modal !== null);
+      return modal !== null;
     }
 
     private startListening() {
       document.addEventListener('keydown', this.keydownListener);
-      window.addEventListener('scroll', this.updateOverlays.bind(this), true);
+      window.addEventListener('scroll', 
+                              // this.throttle(
+                                this.updateOverlays.bind(this),
+                                // 10),
+                                true);
     }
 
 
@@ -73,6 +84,21 @@ export default class NavigatorManager {
 
     private resetLinkMap() {
       this.linkMap = new Map<number, HTMLAnchorElement>();
+    }
+
+
+    // Throttling function to limit how often a function can run
+    private throttle(func, limit) {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        }
     }
 
 

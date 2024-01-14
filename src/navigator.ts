@@ -19,35 +19,6 @@ export default class Navigator {
     private linkSelectionInput: string = '';
 
 
-    private removeOverlays() {
-      this.overlays.forEach(overlay => overlay.remove());
-    }
-
-
-    private updateOverlays() {
-      if (this.isInLinkSelectionMode) {
-        this.removeOverlays();
-
-        let startDigitsAt = 1;
-        if (this.linkFilter.filteredLinks.length > 9) {
-          startDigitsAt = Math.ceil(this.linkFilter.filteredLinks.length / 10) + 1;
-        }
-
-        this.linkFilter.filteredLinks.forEach((link, index) => {
-          let linkNumber = index + startDigitsAt;
-          const newOverlay = new Overlay(link, index, linkNumber, this.openInNewTab);
-          this.overlays.push(newOverlay);
-          this.linkFilter.setLinkMap(linkNumber, link);
-        });
-      }
-    }
-
-
-    private handleKeyPress = debounce((evt: KeyboardEvent) => {
-      this.handleKeyPressFunc(evt);
-    }, 50);
-
-
     startNavigator(plugin) {
       this.linkFilter.createFilterDisplayBox();
 
@@ -71,6 +42,7 @@ export default class Navigator {
       this.stopListening();
     }
 
+
     private isModalOpen(): boolean {
       let modal = document.querySelector('.modal');
       if (modal === null) {
@@ -78,6 +50,7 @@ export default class Navigator {
       }
       return modal !== null;
     }
+
 
     private startListening() {
       document.addEventListener('keydown', this.keydownListener);
@@ -187,6 +160,34 @@ export default class Navigator {
     }
 
 
+    private removeOverlays() {
+      this.overlays.forEach(overlay => overlay.remove());
+    }
+
+
+    private updateOverlays() {
+      if (this.isInLinkSelectionMode) {
+        this.removeOverlays();
+
+        let startDigitsAt = 1;
+        if (this.linkFilter.filteredLinks.length > 9) {
+          startDigitsAt = Math.ceil(this.linkFilter.filteredLinks.length / 10) + 1;
+        }
+
+        this.linkFilter.filteredLinks.forEach((link, index) => {
+          let linkNumber = index + startDigitsAt;
+          const newOverlay = new Overlay(link, index, linkNumber, this.openInNewTab);
+          this.overlays.push(newOverlay);
+          this.linkFilter.setLinkMap(linkNumber, link);
+        });
+      }
+    }
+
+
+    private handleKeyPress = debounce((evt: KeyboardEvent) => {
+      this.handleKeyPressFunc(evt);
+    }, 50);
+
 
     private enterLinkSelectionMode(forNewTab: boolean = false) {
       if (!this.isInMarkdownReadMode()) {
@@ -212,6 +213,5 @@ export default class Navigator {
         this.openInNewTab = false;
         this.linkFilter.reset();
     }
-
 }
 

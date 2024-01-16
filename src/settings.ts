@@ -32,7 +32,7 @@ export class NavigatorPluginSettingTab extends PluginSettingTab {
           .setName('Scroll Speed')
           .setDesc('Adjust the scroll speed for j/k keys')
           .addSlider(slider => 
-              slider.setLimits(10, 500, 10)
+              slider.setLimits(0.1, 5, 0.01)
                     .setValue(this.plugin.settings.scrollSpeed)
                     .onChange(async (value) => {
                         this.plugin.settings.scrollSpeed = value;

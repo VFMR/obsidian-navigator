@@ -156,14 +156,10 @@ export default class Navigator {
           this.scroller.scrollDown();
         } else if (evt.key === 'k') {
           this.scroller.scrollUp();
-        } else if (evt.key === 'h') {
-          this.scroller.scrollLeft();
-        } else if (evt.key === 'k') {
-          this.scroller.scrollRight();
-        } else if (evt.key === 'G') {
-          this.scroller.scrollToBottom();
+        // } else if (evt.key === 'G') {
+        //   this.scroller.scrollToBottom();
         } else if (evt.key === 'g') {
-          this.scroller.scrollToBottom();
+          this.scroller.scrollToTop();
         } else if (evt.key === 'k') {
           this.scroller.scrollRight();
         } else if (evt.key === 't') {

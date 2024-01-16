@@ -98,7 +98,6 @@ export default class LinkFilter {
     this.resetLinkMap();
 
     let links = Array.from(contentEl.querySelectorAll(this.clickableElements));
-    console.log(links);
     const filteredLinks = links.filter(link =>
       this.clickableClasses.some(className => link.classList.contains(className))
     );

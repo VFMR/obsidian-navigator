@@ -1,3 +1,4 @@
+import { MarkdownView } from 'obsidian';
 import NavigatorPluginSettings from './settings'
 
 
@@ -7,57 +8,49 @@ export default class NavigatorScroll {
       this.settings = settings;
   }
 
-  private scrollableClassName: string = 'markdown-preview-view.markdown-rendered';
+  // private scrollableClassName: string = 'markdown-preview-view.markdown-rendered';
 
   private getScrollContainer() {
-    const activeLeaf = this.app.workspace.activeLeaf;
-    const activeElement = activeLeaf?.view.containerEl;
-    const activeScrollableElement = activeElement.querySelector('.' + this.scrollableClassName);
-    return activeScrollableElement;
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (view) {
+      return view.previewMode;
+    }
   }
 
 
-  private scroll(xSpeed: number, ySpeed: number) {
+  private scroll(speed: number) {
+    const activeScrollableElement = this.getScrollContainer();
+    const currentScroll = activeScrollableElement.getScroll();
+    const position = currentScroll + speed;
+    this.scrollTo(position);
+  }
+
+
+  private scrollTo(position: number) {
     const activeScrollableElement = this.getScrollContainer();
     if (activeScrollableElement) {
-      activeScrollableElement.scrollBy(xSpeed, ySpeed);
+      activeScrollableElement.applyScroll(position);
     }
   }
 
 
-  private scrollDown() {
-    this.scroll(0, this.settings.scrollSpeed)
+  scrollDown() {
+    this.scroll(this.settings.scrollSpeed);
   }
 
 
-  private scrollUp() {
-    this.scroll(0, -this.settings.scrollSpeed)
+  scrollUp() {
+    this.scroll(-this.settings.scrollSpeed);
   }
 
 
-  private scrollLeft() {
-    this.scroll(this.settings.scrollSpeed, 0)
+  scrollToTop() {
+    this.scrollTo(0);
   }
 
 
-  private scrollRight() {
-    this.scroll(-this.settings.scrollSpeed, 0)
-  }
-
-
-  private scrollToTop() {
-    const scrollContainer = this.getScrollContainer();
-    if (scrollContainer) {
-      scrollContainer.scrollTo(0, 0);
-    }
-  }
-
-
-  private scrollToBottom() {
-    const scrollContainer = this.getScrollContainer();
-    if (scrollContainer) {
-      scrollContainer.scrollTo(0, scrollContainer.scrollHeight);
-    }
-  }
+  // scrollToBottom() {
+  //   this.scrollTo(); 
+  // }
 }
 

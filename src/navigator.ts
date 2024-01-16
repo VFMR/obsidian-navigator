@@ -1,4 +1,4 @@
-import { TFile, debounce } from 'obsidian';
+import { TFile, debounce, MarkdownView } from 'obsidian';
 import NavigatorScroll  from './scroll';
 import NavigatorPluginSettings from './settings'
 import LinkFilter from './links'
@@ -43,6 +43,18 @@ export default class Navigator {
     }
 
 
+    private getActiveContent(): HTMLElement {
+      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (activeView) {
+        const preview = activeView.previewMode;
+        if (preview) {
+          return preview.containerEl;
+        }
+      }
+      return null;
+    }
+
+
     private isModalOpen(): boolean {
       let modal = document.querySelector('.modal');
       if (modal === null) {
@@ -69,8 +81,13 @@ export default class Navigator {
 
 
     private isInMarkdownReadMode(): boolean {
-      const activeLeaf = this.app.workspace.activeLeaf;
-      return activeLeaf?.view.getViewType() === 'markdown' // && !activeLeaf.view.getState().mode;
+      const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (view) {
+        const viewType = view.getViewType();
+        const viewMode = view.getMode();
+        return viewType === 'markdown' && viewMode === 'preview';
+      }
+      return false;
     }
 
 
@@ -128,7 +145,7 @@ export default class Navigator {
 
         // Alphabet character: filter links
         } else if (evt.key.length === 1 && /[a-zA-Z]/.test(evt.key)) {
-          this.linkFilter.update(evt.key);
+          this.linkFilter.update(evt.key, this.getActiveContent());
           this.updateOverlays();
         }
 
@@ -176,7 +193,7 @@ export default class Navigator {
 
         this.linkFilter.filteredLinks.forEach((link, index) => {
           let linkNumber = index + startDigitsAt;
-          const newOverlay = new Overlay(link, index, linkNumber, this.openInNewTab);
+          const newOverlay = new Overlay(this.getActiveContent(), link, index, linkNumber, this.openInNewTab);
           this.overlays.push(newOverlay);
           this.linkFilter.setLinkMap(linkNumber, link);
         });
@@ -202,7 +219,7 @@ export default class Navigator {
       }
       this.isInLinkSelectionMode = true;
       this.linkFilter.reset();
-      this.linkFilter.update();
+      this.linkFilter.update(null, this.getActiveContent());
       this.updateOverlays();
     }
 

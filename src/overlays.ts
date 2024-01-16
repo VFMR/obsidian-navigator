@@ -6,8 +6,12 @@ export default class Overlay {
   defaultLinkClass: string = 'default-link-overlay';
   allClassNames: string[] = [this.baseClass, this.newTabClass, this.defaultLinkClass];
 
-  constructor(link: string, index: number, linkNumber: number, newTab: boolean = false) {
-    let overlay = document.createElement('div');
+  constructor(contentEl: HTMLElement,
+              link: string, 
+              index: number,
+              linkNumber: number,
+              newTab: boolean = false) {
+    let overlay = contentEl.createEl('div');
     const computedStyle = window.getComputedStyle(link)
     const fontSize = parseFloat(computedStyle.fontSize);
     const offsetX = -fontSize ;

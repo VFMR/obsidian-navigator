@@ -44,12 +44,12 @@ export default class LinkFilter {
   }
 
 
-  update(key: string | null = null) {
+  update(key: string | null = null, contentEl: HTMLElement) {
     if (key !== null) {
       this.updateFilterInput(key);
       this.updateFilterDisplayBox();
     }
-    this.updateFilteredLinks();
+    this.updateFilteredLinks(contentEl);
   }
 
 
@@ -94,10 +94,11 @@ export default class LinkFilter {
   }
 
 
-  private updateFilteredLinks() {
+  private updateFilteredLinks(contentEl: HTMLElement) {
     this.resetLinkMap();
 
-    let links = Array.from(document.querySelectorAll(this.clickableElements));
+    let links = Array.from(contentEl.querySelectorAll(this.clickableElements));
+    console.log(links);
     const filteredLinks = links.filter(link =>
       this.clickableClasses.some(className => link.classList.contains(className))
     );

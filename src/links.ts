@@ -15,8 +15,8 @@ export default class LinkFilter {
                                         'markdown-embed-link',
                                         // 'copy-code-button',
                                         // 'internal-embed',
-                                        'code-block-flair',
-                                        'collapse-indicator'
+                                        // 'code-block-flair',
+                                        // 'collapse-indicator'
                                         // 'multi-select-pill',
                                         // 'clickable-icon',
                                         // 'metadata-property-key-input'

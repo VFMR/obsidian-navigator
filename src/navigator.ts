@@ -1,8 +1,8 @@
 import { TFile, debounce, MarkdownView } from 'obsidian';
 import NavigatorScroll  from './scroll';
-import NavigatorPluginSettings from './settings'
-import LinkFilter from './links'
-import Overlay from './overlays'
+import NavigatorPluginSettings from './settings';
+import LinkFilter from './links';
+import Overlay from './overlays';
 
 
 export default class Navigator {
@@ -42,6 +42,9 @@ export default class Navigator {
       this.stopListening();
     }
 
+    private getActiveLeaf(): WorkspaceLeaf {
+      return this.app.workspace.activeLeaf;
+    }
 
     private getActiveContent(): HTMLElement {
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -68,10 +71,13 @@ export default class Navigator {
       document.addEventListener('keydown', this.keydownListener);
       window.addEventListener('scroll', 
                               // this.throttle(
-                                this.updateOverlays.bind(this),
+                                // this.updateOverlays.bind(this),
+                              this.leaveLinkSelectionMode.bind(this),
                                 // 10),
                                 true);
     }
+
+
 
 
     private stopListening() {
@@ -96,6 +102,7 @@ export default class Navigator {
           this.handleKeyPress(evt);
       }
     };
+
 
 
     // Throttling function to limit how often a function can run
@@ -182,6 +189,8 @@ export default class Navigator {
       if (this.isInLinkSelectionMode) {
         this.removeOverlays();
 
+        await this.linkFilter.update(null, this.getActiveContent());
+
         let startDigitsAt = 1;
         if (this.linkFilter.filteredLinks.length > 9) {
           startDigitsAt = Math.ceil(this.linkFilter.filteredLinks.length / 10) + 1;
@@ -195,6 +204,7 @@ export default class Navigator {
         });
       }
     }
+
 
 
     private handleKeyPress = debounce((evt: KeyboardEvent) => {
@@ -214,17 +224,18 @@ export default class Navigator {
         this.openInNewTab = false
       }
       this.isInLinkSelectionMode = true;
-      this.linkFilter.reset();
-      await this.linkFilter.update(null, this.getActiveContent());
+      // this.linkFilter.reset();
       await this.updateOverlays();
     }
 
 
     private leaveLinkSelectionMode() {
+      if (this.isInLinkSelectionMode) {
         this.removeOverlays();
         this.isInLinkSelectionMode = false;
         this.openInNewTab = false;
         this.linkFilter.reset();
+      }
     }
 }
 

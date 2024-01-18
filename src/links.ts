@@ -21,9 +21,10 @@ export default class LinkFilter {
                                         // 'clickable-icon',
                                         // 'metadata-property-key-input'
                                         ];
-  private clickableElements: string = 'a, button, input, div';
+  private clickableElements: string = 'a, button, input';
   private filterBoxClass: string = 'navigator-filter-box';
   private internalLinkUrl: string = 'app://obsidian.md/'
+  private clientHeight: number = 0;
 
 
   setup() {
@@ -94,13 +95,35 @@ export default class LinkFilter {
   }
 
 
+  private isElementInViewport(el: HTMLElement): boolean {
+    const rect = el.getBoundingClientRect();
+    return (
+      rect.top >= 0 &&
+      rect.bottom <= this.clientHeight
+    );
+  }
+
+
+  private isVisible(el: HTMLElement): boolean {
+    return this.isElementInViewport(el);
+  }
+
+
+  private getVisibleElements(elements: HTMLElement[]): HTMLElement[] {
+    return elements.filter((element) => this.isVisible(element));
+  }
+
+
   private async updateFilteredLinks(contentEl: HTMLElement) {
     this.resetLinkMap();
+    this.clientHeight = document.documentElement.clientHeight;
 
     let links = Array.from(contentEl.querySelectorAll(this.clickableElements));
-    const filteredLinks = links.filter(link =>
+
+    let filteredLinks = links.filter(link =>
       this.clickableClasses.some(className => link.classList.contains(className))
     );
+    filteredLinks = this.getVisibleElements(filteredLinks);
 
     if (this.filterInput) {
       const inputFilteredLinks = filteredLinks.filter(link => 

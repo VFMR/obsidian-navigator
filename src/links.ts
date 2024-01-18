@@ -44,12 +44,12 @@ export default class LinkFilter {
   }
 
 
-  update(key: string | null = null, contentEl: HTMLElement) {
+  async update(key: string | null = null, contentEl: HTMLElement) {
     if (key !== null) {
       this.updateFilterInput(key);
       this.updateFilterDisplayBox();
     }
-    this.updateFilteredLinks(contentEl);
+    await this.updateFilteredLinks(contentEl);
   }
 
 
@@ -94,7 +94,7 @@ export default class LinkFilter {
   }
 
 
-  private updateFilteredLinks(contentEl: HTMLElement) {
+  private async updateFilteredLinks(contentEl: HTMLElement) {
     this.resetLinkMap();
 
     let links = Array.from(contentEl.querySelectorAll(this.clickableElements));

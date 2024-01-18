@@ -113,7 +113,7 @@ export default class Navigator {
     }
 
 
-    private handleKeyPressFunc(evt: KeyboardEvent) {
+    private async handleKeyPressFunc(evt: KeyboardEvent) {
       if (!this.isInMarkdownReadMode()) {
           return;
       }
@@ -165,9 +165,9 @@ export default class Navigator {
         } else if (evt.key === 't') {
           this.app.workspace.getLeaf('tab')
         } else if (evt.key === 'f') {
-          this.enterLinkSelectionMode();
+          await this.enterLinkSelectionMode();
         } else if (evt.key === 'F') {
-          this.enterLinkSelectionMode(true);
+          await this.enterLinkSelectionMode(true);
         }
       }
     }
@@ -178,7 +178,7 @@ export default class Navigator {
     }
 
 
-    private updateOverlays() {
+    private async updateOverlays() {
       if (this.isInLinkSelectionMode) {
         this.removeOverlays();
 
@@ -202,7 +202,7 @@ export default class Navigator {
     }, 50);
 
 
-    private enterLinkSelectionMode(forNewTab: boolean = false) {
+    private async enterLinkSelectionMode(forNewTab: boolean = false) {
       if (!this.isInMarkdownReadMode()) {
             return;
         }
@@ -215,8 +215,8 @@ export default class Navigator {
       }
       this.isInLinkSelectionMode = true;
       this.linkFilter.reset();
-      this.linkFilter.update(null, this.getActiveContent());
-      this.updateOverlays();
+      await this.linkFilter.update(null, this.getActiveContent());
+      await this.updateOverlays();
     }
 
 
